@@ -1,0 +1,1025 @@
+pos,role,table,split,row_id,node_idx,column,sem_type,value_seen_by_model,row_timestamp,f2p_edges,is_target,is_mask
+0,FEAT,driver-dnf,Train,0,98308,date of driver-dnf,datetime,2004-08-04,2004-08-04,drivers:Db#20,False,False
+1,TARGET+COL+FEAT,driver-dnf,Train,0,98308,did_not_finish of driver-dnf,boolean,[MASK:boolean] label=1,2004-08-04,drivers:Db#20,True,True
+2,FEAT,drivers,Db,20,25649,driverRef of drivers,text,fisichella,,,False,False
+3,FEAT,drivers,Db,20,25649,code of drivers,text,FIS,,,False,False
+4,FEAT,drivers,Db,20,25649,forename of drivers,text,Giancarlo,,,False,False
+5,FEAT,drivers,Db,20,25649,surname of drivers,text,Fisichella,,,False,False
+6,FEAT,drivers,Db,20,25649,dob of drivers,datetime,datetime_z=-0.83203,,,False,False
+7,FEAT,drivers,Db,20,25649,nationality of drivers,text,Italian,,,False,False
+8,DRIVER_NBR_INDIRECT,results,Db,15909,53311,number of results,number,number_z=-0.38672,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+9,DRIVER_NBR_INDIRECT,results,Db,15909,53311,grid of results,number,number_z=0.39258,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+10,DRIVER_NBR_INDIRECT,results,Db,15909,53311,position of results,number,number_z=-0.82422,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+11,DRIVER_NBR_INDIRECT,results,Db,15909,53311,positionOrder of results,number,number_z=-1.1484,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+12,DRIVER_NBR_INDIRECT,results,Db,15909,53311,points of results,number,number_z=0.25977,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+13,DRIVER_NBR_INDIRECT,results,Db,15909,53311,laps of results,number,number_z=0.83984,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+14,DRIVER_NBR_INDIRECT,results,Db,15909,53311,milliseconds of results,number,number_z=-0.57031,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+15,DRIVER_NBR_INDIRECT,results,Db,15909,53311,statusId of results,number,number_z=-0.62891,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+16,DRIVER_NBR_INDIRECT,results,Db,15909,53311,date of results,datetime,1997-09-21,1997-09-21,races:Db#610; drivers:Db#20; constructors:Db#16,False,False
+17,FULL_ONLY,constructors,Db,16,25434,constructorRef of constructors,text,jordan,,,False,False
+18,FULL_ONLY,constructors,Db,16,25434,name of constructors,text,Jordan,,,False,False
+19,FULL_ONLY,constructors,Db,16,25434,nationality of constructors,text,Irish,,,False,False
+20,FULL_ONLY,races,Db,610,36911,year of races,number,number_z=0.24512,1997-09-21,circuits:Db#69,False,False
+21,FULL_ONLY,races,Db,610,36911,round of races,number,number_z=1.0859,1997-09-21,circuits:Db#69,False,False
+22,FULL_ONLY,races,Db,610,36911,name of races,text,Austrian Grand Prix,1997-09-21,circuits:Db#69,False,False
+23,FULL_ONLY,races,Db,610,36911,date of races,datetime,1997-09-21,1997-09-21,circuits:Db#69,False,False
+24,FULL_ONLY,races,Db,610,36911,time of races,text,00:00:00,1997-09-21,circuits:Db#69,False,False
+25,FULL_ONLY,circuits,Db,69,69,circuitRef of circuits,text,red_bull_ring,,,False,False
+26,FULL_ONLY,circuits,Db,69,69,name of circuits,text,Red Bull Ring,,,False,False
+27,FULL_ONLY,circuits,Db,69,69,location of circuits,text,Spielberg,,,False,False
+28,FULL_ONLY,circuits,Db,69,69,country of circuits,text,Austria,,,False,False
+29,FULL_ONLY,circuits,Db,69,69,lat of circuits,number,number_z=0.60547,,,False,False
+30,FULL_ONLY,circuits,Db,69,69,lng of circuits,number,number_z=0.20898,,,False,False
+31,FULL_ONLY,circuits,Db,69,69,alt of circuits,number,number_z=1.1797,,,False,False
+32,DRIVER_NBR_INDIRECT,driver-dnf,Train,10008,108316,date of driver-dnf,datetime,1999-08-31,1999-08-31,drivers:Db#20,False,False
+33,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,10008,108316,did_not_finish of driver-dnf,boolean,1,1999-08-31,drivers:Db#20,False,False
+34,DRIVER_NBR_INDIRECT,qualifying,Db,1493,27979,number of qualifying,number,number_z=-0.62109,2001-09-29,races:Db#678; drivers:Db#20; constructors:Db#21,False,False
+35,DRIVER_NBR_INDIRECT,qualifying,Db,1493,27979,position of qualifying,number,number_z=0.12012,2001-09-29,races:Db#678; drivers:Db#20; constructors:Db#21,False,False
+36,DRIVER_NBR_INDIRECT,qualifying,Db,1493,27979,date of qualifying,datetime,2001-09-29,2001-09-29,races:Db#678; drivers:Db#20; constructors:Db#21,False,False
+37,FULL_ONLY,constructors,Db,21,25439,constructorRef of constructors,text,benetton,,,False,False
+38,FULL_ONLY,constructors,Db,21,25439,name of constructors,text,Benetton,,,False,False
+39,FULL_ONLY,constructors,Db,21,25439,nationality of constructors,text,Italian,,,False,False
+40,FULL_ONLY,races,Db,678,36979,year of races,number,number_z=0.44336,2001-09-30,circuits:Db#18,False,False
+41,FULL_ONLY,races,Db,678,36979,round of races,number,number_z=1.4766,2001-09-30,circuits:Db#18,False,False
+42,FULL_ONLY,races,Db,678,36979,name of races,text,United States Grand Prix,2001-09-30,circuits:Db#18,False,False
+43,FULL_ONLY,races,Db,678,36979,date of races,datetime,2001-09-30,2001-09-30,circuits:Db#18,False,False
+44,FULL_ONLY,races,Db,678,36979,time of races,text,00:00:00,2001-09-30,circuits:Db#18,False,False
+45,FULL_ONLY,circuits,Db,18,18,circuitRef of circuits,text,indianapolis,,,False,False
+46,FULL_ONLY,circuits,Db,18,18,name of circuits,text,Indianapolis Motor Speedway,,,False,False
+47,FULL_ONLY,circuits,Db,18,18,location of circuits,text,Indianapolis,,,False,False
+48,FULL_ONLY,circuits,Db,18,18,country of circuits,text,USA,,,False,False
+49,FULL_ONLY,circuits,Db,18,18,lat of circuits,number,number_z=0.2793,,,False,False
+50,FULL_ONLY,circuits,Db,18,18,lng of circuits,number,number_z=-1.3359,,,False,False
+51,FULL_ONLY,circuits,Db,18,18,alt of circuits,number,number_z=-0.068848,,,False,False
+52,DRIVER_NBR_INDIRECT,standings,Db,24625,88107,points of standings,number,number_z=0.12695,2000-09-24,races:Db#660; drivers:Db#20,False,False
+53,DRIVER_NBR_INDIRECT,standings,Db,24625,88107,position of standings,number,number_z=-0.84766,2000-09-24,races:Db#660; drivers:Db#20,False,False
+54,DRIVER_NBR_INDIRECT,standings,Db,24625,88107,wins of standings,number,number_z=-0.27148,2000-09-24,races:Db#660; drivers:Db#20,False,False
+55,DRIVER_NBR_INDIRECT,standings,Db,24625,88107,date of standings,datetime,2000-09-24,2000-09-24,races:Db#660; drivers:Db#20,False,False
+56,FULL_ONLY,races,Db,660,36961,year of races,number,number_z=0.39258,2000-09-24,circuits:Db#18,False,False
+57,FULL_ONLY,races,Db,660,36961,round of races,number,number_z=1.2812,2000-09-24,circuits:Db#18,False,False
+58,FULL_ONLY,races,Db,660,36961,name of races,text,United States Grand Prix,2000-09-24,circuits:Db#18,False,False
+59,FULL_ONLY,races,Db,660,36961,date of races,datetime,2000-09-24,2000-09-24,circuits:Db#18,False,False
+60,FULL_ONLY,races,Db,660,36961,time of races,text,00:00:00,2000-09-24,circuits:Db#18,False,False
+61,DRIVER_NBR_INDIRECT,driver-dnf,Train,5796,104104,date of driver-dnf,datetime,1996-06-17,1996-06-17,drivers:Db#20,False,False
+62,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,5796,104104,did_not_finish of driver-dnf,boolean,1,1996-06-17,drivers:Db#20,False,False
+63,DRIVER_NBR_INDIRECT,standings,Db,24371,87853,points of standings,number,number_z=-0.1543,2000-04-23,races:Db#649; drivers:Db#20,False,False
+64,DRIVER_NBR_INDIRECT,standings,Db,24371,87853,position of standings,number,number_z=-0.84766,2000-04-23,races:Db#649; drivers:Db#20,False,False
+65,DRIVER_NBR_INDIRECT,standings,Db,24371,87853,wins of standings,number,number_z=-0.27148,2000-04-23,races:Db#649; drivers:Db#20,False,False
+66,DRIVER_NBR_INDIRECT,standings,Db,24371,87853,date of standings,datetime,2000-04-23,2000-04-23,races:Db#649; drivers:Db#20,False,False
+67,FULL_ONLY,races,Db,649,36950,year of races,number,number_z=0.39258,2000-04-23,circuits:Db#8,False,False
+68,FULL_ONLY,races,Db,649,36950,round of races,number,number_z=-0.88281,2000-04-23,circuits:Db#8,False,False
+69,FULL_ONLY,races,Db,649,36950,name of races,text,British Grand Prix,2000-04-23,circuits:Db#8,False,False
+70,FULL_ONLY,races,Db,649,36950,date of races,datetime,2000-04-23,2000-04-23,circuits:Db#8,False,False
+71,FULL_ONLY,races,Db,649,36950,time of races,text,00:00:00,2000-04-23,circuits:Db#8,False,False
+72,FULL_ONLY,circuits,Db,8,8,circuitRef of circuits,text,silverstone,,,False,False
+73,FULL_ONLY,circuits,Db,8,8,name of circuits,text,Silverstone Circuit,,,False,False
+74,FULL_ONLY,circuits,Db,8,8,location of circuits,text,Silverstone,,,False,False
+75,FULL_ONLY,circuits,Db,8,8,country of circuits,text,UK,,,False,False
+76,FULL_ONLY,circuits,Db,8,8,lat of circuits,number,number_z=0.81641,,,False,False
+77,FULL_ONLY,circuits,Db,8,8,lng of circuits,number,number_z=-0.031982,,,False,False
+78,FULL_ONLY,circuits,Db,8,8,alt of circuits,number,number_z=-0.26172,,,False,False
+79,DRIVER_NBR_INDIRECT,results,Db,16862,54264,number of results,number,number_z=-0.45117,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+80,DRIVER_NBR_INDIRECT,results,Db,16862,54264,grid of results,number,number_z=0.39258,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+81,DRIVER_NBR_INDIRECT,results,Db,16862,54264,position of results,number,number_z=0.21484,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+82,DRIVER_NBR_INDIRECT,results,Db,16862,54264,positionOrder of results,number,number_z=-0.5,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+83,DRIVER_NBR_INDIRECT,results,Db,16862,54264,points of results,number,number_z=-0.45117,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+84,DRIVER_NBR_INDIRECT,results,Db,16862,54264,laps of results,number,number_z=0.83984,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+85,DRIVER_NBR_INDIRECT,results,Db,16862,54264,statusId of results,number,number_z=-0.24805,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+86,DRIVER_NBR_INDIRECT,results,Db,16862,54264,date of results,datetime,2000-07-02,2000-07-02,races:Db#654; drivers:Db#20; constructors:Db#21,False,False
+87,FULL_ONLY,races,Db,654,36955,year of races,number,number_z=0.39258,2000-07-02,circuits:Db#7,False,False
+88,FULL_ONLY,races,Db,654,36955,round of races,number,number_z=0.099609,2000-07-02,circuits:Db#7,False,False
+89,FULL_ONLY,races,Db,654,36955,name of races,text,French Grand Prix,2000-07-02,circuits:Db#7,False,False
+90,FULL_ONLY,races,Db,654,36955,date of races,datetime,2000-07-02,2000-07-02,circuits:Db#7,False,False
+91,FULL_ONLY,races,Db,654,36955,time of races,text,00:00:00,2000-07-02,circuits:Db#7,False,False
+92,FULL_ONLY,circuits,Db,7,7,circuitRef of circuits,text,magny_cours,,,False,False
+93,FULL_ONLY,circuits,Db,7,7,name of circuits,text,Circuit de Nevers Magny-Cours,,,False,False
+94,FULL_ONLY,circuits,Db,7,7,location of circuits,text,Magny Cours,,,False,False
+95,FULL_ONLY,circuits,Db,7,7,country of circuits,text,France,,,False,False
+96,FULL_ONLY,circuits,Db,7,7,lat of circuits,number,number_z=0.58984,,,False,False
+97,FULL_ONLY,circuits,Db,7,7,lng of circuits,number,number_z=0.031738,,,False,False
+98,FULL_ONLY,circuits,Db,7,7,alt of circuits,number,number_z=-0.05542,,,False,False
+99,DRIVER_NBR_INDIRECT,driver-dnf,Train,5742,104050,date of driver-dnf,datetime,2000-03-28,2000-03-28,drivers:Db#20,False,False
+100,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,5742,104050,did_not_finish of driver-dnf,boolean,1,2000-03-28,drivers:Db#20,False,False
+101,DRIVER_NBR_INDIRECT,driver-dnf,Train,3636,101944,date of driver-dnf,datetime,1998-03-09,1998-03-09,drivers:Db#20,False,False
+102,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,3636,101944,did_not_finish of driver-dnf,boolean,1,1998-03-09,drivers:Db#20,False,False
+103,DRIVER_NBR_INDIRECT,driver-dnf,Train,10723,109031,date of driver-dnf,datetime,2002-08-15,2002-08-15,drivers:Db#20,False,False
+104,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,10723,109031,did_not_finish of driver-dnf,boolean,1,2002-08-15,drivers:Db#20,False,False
+105,DRIVER_NBR_INDIRECT,driver-dnf,Train,1400,99708,date of driver-dnf,datetime,2002-03-18,2002-03-18,drivers:Db#20,False,False
+106,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,1400,99708,did_not_finish of driver-dnf,boolean,1,2002-03-18,drivers:Db#20,False,False
+107,DRIVER_NBR_INDIRECT,results,Db,17797,55199,number of results,number,number_z=-0.45117,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+108,DRIVER_NBR_INDIRECT,results,Db,17797,55199,grid of results,number,number_z=0.25391,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+109,DRIVER_NBR_INDIRECT,results,Db,17797,55199,positionOrder of results,number,number_z=-0.11084,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+110,DRIVER_NBR_INDIRECT,results,Db,17797,55199,points of results,number,number_z=-0.45117,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+111,DRIVER_NBR_INDIRECT,results,Db,17797,55199,laps of results,number,number_z=0.19922,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+112,DRIVER_NBR_INDIRECT,results,Db,17797,55199,statusId of results,number,number_z=-0.43945,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+113,DRIVER_NBR_INDIRECT,results,Db,17797,55199,date of results,datetime,2003-03-09,2003-03-09,races:Db#697; drivers:Db#20; constructors:Db#16,False,False
+114,FULL_ONLY,races,Db,697,36998,year of races,number,number_z=0.53906,2003-03-09,circuits:Db#0,False,False
+115,FULL_ONLY,races,Db,697,36998,round of races,number,number_z=-1.4766,2003-03-09,circuits:Db#0,False,False
+116,FULL_ONLY,races,Db,697,36998,name of races,text,Australian Grand Prix,2003-03-09,circuits:Db#0,False,False
+117,FULL_ONLY,races,Db,697,36998,date of races,datetime,2003-03-09,2003-03-09,circuits:Db#0,False,False
+118,FULL_ONLY,races,Db,697,36998,time of races,text,00:00:00,2003-03-09,circuits:Db#0,False,False
+119,FULL_ONLY,circuits,Db,0,0,circuitRef of circuits,text,albert_park,,,False,False
+120,FULL_ONLY,circuits,Db,0,0,name of circuits,text,Albert Park Grand Prix Circuit,,,False,False
+121,FULL_ONLY,circuits,Db,0,0,location of circuits,text,Melbourne,,,False,False
+122,FULL_ONLY,circuits,Db,0,0,country of circuits,text,Australia,,,False,False
+123,FULL_ONLY,circuits,Db,0,0,lat of circuits,number,number_z=-3.125,,,False,False
+124,FULL_ONLY,circuits,Db,0,0,lng of circuits,number,number_z=2.2031,,,False,False
+125,FULL_ONLY,circuits,Db,0,0,alt of circuits,number,number_z=-0.65234,,,False,False
+126,DRIVER_NBR_INDIRECT,qualifying,Db,2032,28518,number of qualifying,number,number_z=-0.39844,2004-06-19,races:Db#721; drivers:Db#20; constructors:Db#14,False,False
+127,DRIVER_NBR_INDIRECT,qualifying,Db,2032,28518,position of qualifying,number,number_z=0.4375,2004-06-19,races:Db#721; drivers:Db#20; constructors:Db#14,False,False
+128,DRIVER_NBR_INDIRECT,qualifying,Db,2032,28518,date of qualifying,datetime,2004-06-19,2004-06-19,races:Db#721; drivers:Db#20; constructors:Db#14,False,False
+129,FULL_ONLY,constructors,Db,14,25432,constructorRef of constructors,text,sauber,,,False,False
+130,FULL_ONLY,constructors,Db,14,25432,name of constructors,text,Sauber,,,False,False
+131,FULL_ONLY,constructors,Db,14,25432,nationality of constructors,text,Swiss,,,False,False
+132,FULL_ONLY,races,Db,721,37022,year of races,number,number_z=0.58984,2004-06-20,circuits:Db#18,False,False
+133,FULL_ONLY,races,Db,721,37022,round of races,number,number_z=0.099609,2004-06-20,circuits:Db#18,False,False
+134,FULL_ONLY,races,Db,721,37022,name of races,text,United States Grand Prix,2004-06-20,circuits:Db#18,False,False
+135,FULL_ONLY,races,Db,721,37022,date of races,datetime,2004-06-20,2004-06-20,circuits:Db#18,False,False
+136,FULL_ONLY,races,Db,721,37022,time of races,text,00:00:00,2004-06-20,circuits:Db#18,False,False
+137,DRIVER_NBR_INDIRECT,standings,Db,24800,88282,points of standings,number,number_z=-0.35156,2001-05-27,races:Db#669; drivers:Db#20,False,False
+138,DRIVER_NBR_INDIRECT,standings,Db,24800,88282,position of standings,number,number_z=-0.2373,2001-05-27,races:Db#669; drivers:Db#20,False,False
+139,DRIVER_NBR_INDIRECT,standings,Db,24800,88282,wins of standings,number,number_z=-0.27148,2001-05-27,races:Db#669; drivers:Db#20,False,False
+140,DRIVER_NBR_INDIRECT,standings,Db,24800,88282,date of standings,datetime,2001-05-27,2001-05-27,races:Db#669; drivers:Db#20,False,False
+141,FULL_ONLY,races,Db,669,36970,year of races,number,number_z=0.44336,2001-05-27,circuits:Db#5,False,False
+142,FULL_ONLY,races,Db,669,36970,round of races,number,number_z=-0.29492,2001-05-27,circuits:Db#5,False,False
+143,FULL_ONLY,races,Db,669,36970,name of races,text,Monaco Grand Prix,2001-05-27,circuits:Db#5,False,False
+144,FULL_ONLY,races,Db,669,36970,date of races,datetime,2001-05-27,2001-05-27,circuits:Db#5,False,False
+145,FULL_ONLY,races,Db,669,36970,time of races,text,00:00:00,2001-05-27,circuits:Db#5,False,False
+146,FULL_ONLY,circuits,Db,5,5,circuitRef of circuits,text,monaco,,,False,False
+147,FULL_ONLY,circuits,Db,5,5,name of circuits,text,Circuit de Monaco,,,False,False
+148,FULL_ONLY,circuits,Db,5,5,location of circuits,text,Monte-Carlo,,,False,False
+149,FULL_ONLY,circuits,Db,5,5,country of circuits,text,Monaco,,,False,False
+150,FULL_ONLY,circuits,Db,5,5,lat of circuits,number,number_z=0.45117,,,False,False
+151,FULL_ONLY,circuits,Db,5,5,lng of circuits,number,number_z=0.09668,,,False,False
+152,FULL_ONLY,circuits,Db,5,5,alt of circuits,number,number_z=-0.66016,,,False,False
+153,DRIVER_NBR_INDIRECT,results,Db,18210,55612,number of results,number,number_z=-0.45117,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+154,DRIVER_NBR_INDIRECT,results,Db,18210,55612,grid of results,number,number_z=-0.16113,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+155,DRIVER_NBR_INDIRECT,results,Db,18210,55612,positionOrder of results,number,number_z=0.79688,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+156,DRIVER_NBR_INDIRECT,results,Db,18210,55612,points of results,number,number_z=-0.45117,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+157,DRIVER_NBR_INDIRECT,results,Db,18210,55612,laps of results,number,number_z=-1.4844,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+158,DRIVER_NBR_INDIRECT,results,Db,18210,55612,fastestLap of results,number,number_z=-2.4219,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+159,DRIVER_NBR_INDIRECT,results,Db,18210,55612,rank of results,number,number_z=0.91016,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+160,DRIVER_NBR_INDIRECT,results,Db,18210,55612,statusId of results,number,number_z=-0.51562,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+161,DRIVER_NBR_INDIRECT,results,Db,18210,55612,date of results,datetime,2004-05-23,2004-05-23,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+162,FULL_ONLY,races,Db,718,37019,year of races,number,number_z=0.58984,2004-05-23,circuits:Db#5,False,False
+163,FULL_ONLY,races,Db,718,37019,round of races,number,number_z=-0.49023,2004-05-23,circuits:Db#5,False,False
+164,FULL_ONLY,races,Db,718,37019,name of races,text,Monaco Grand Prix,2004-05-23,circuits:Db#5,False,False
+165,FULL_ONLY,races,Db,718,37019,date of races,datetime,2004-05-23,2004-05-23,circuits:Db#5,False,False
+166,FULL_ONLY,races,Db,718,37019,time of races,text,00:00:00,2004-05-23,circuits:Db#5,False,False
+167,DRIVER_NBR_INDIRECT,results,Db,15832,53234,number of results,number,number_z=-0.38672,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+168,DRIVER_NBR_INDIRECT,results,Db,15832,53234,grid of results,number,number_z=0.25391,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+169,DRIVER_NBR_INDIRECT,results,Db,15832,53234,positionOrder of results,number,number_z=0.53906,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+170,DRIVER_NBR_INDIRECT,results,Db,15832,53234,points of results,number,number_z=-0.45117,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+171,DRIVER_NBR_INDIRECT,results,Db,15832,53234,laps of results,number,number_z=-0.13672,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+172,DRIVER_NBR_INDIRECT,results,Db,15832,53234,statusId of results,number,number_z=0.09668,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+173,DRIVER_NBR_INDIRECT,results,Db,15832,53234,date of results,datetime,1997-08-10,1997-08-10,races:Db#607; drivers:Db#20; constructors:Db#16,False,False
+174,FULL_ONLY,races,Db,607,36908,year of races,number,number_z=0.24512,1997-08-10,circuits:Db#10,False,False
+175,FULL_ONLY,races,Db,607,36908,round of races,number,number_z=0.49414,1997-08-10,circuits:Db#10,False,False
+176,FULL_ONLY,races,Db,607,36908,name of races,text,Hungarian Grand Prix,1997-08-10,circuits:Db#10,False,False
+177,FULL_ONLY,races,Db,607,36908,date of races,datetime,1997-08-10,1997-08-10,circuits:Db#10,False,False
+178,FULL_ONLY,races,Db,607,36908,time of races,text,00:00:00,1997-08-10,circuits:Db#10,False,False
+179,FULL_ONLY,circuits,Db,10,10,circuitRef of circuits,text,hungaroring,,,False,False
+180,FULL_ONLY,circuits,Db,10,10,name of circuits,text,Hungaroring,,,False,False
+181,FULL_ONLY,circuits,Db,10,10,location of circuits,text,Budapest,,,False,False
+182,FULL_ONLY,circuits,Db,10,10,country of circuits,text,Hungary,,,False,False
+183,FULL_ONLY,circuits,Db,10,10,lat of circuits,number,number_z=0.62109,,,False,False
+184,FULL_ONLY,circuits,Db,10,10,lng of circuits,number,number_z=0.27734,,,False,False
+185,FULL_ONLY,circuits,Db,10,10,alt of circuits,number,number_z=0.043213,,,False,False
+186,DRIVER_NBR_INDIRECT,driver-dnf,Train,3648,101956,date of driver-dnf,datetime,1996-04-18,1996-04-18,drivers:Db#20,False,False
+187,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,3648,101956,did_not_finish of driver-dnf,boolean,1,1996-04-18,drivers:Db#20,False,False
+188,DRIVER_NBR_INDIRECT,qualifying,Db,1966,28452,number of qualifying,number,number_z=-0.39844,2004-05-08,races:Db#717; drivers:Db#20; constructors:Db#14,False,False
+189,DRIVER_NBR_INDIRECT,qualifying,Db,1966,28452,position of qualifying,number,number_z=0.12012,2004-05-08,races:Db#717; drivers:Db#20; constructors:Db#14,False,False
+190,DRIVER_NBR_INDIRECT,qualifying,Db,1966,28452,date of qualifying,datetime,2004-05-08,2004-05-08,races:Db#717; drivers:Db#20; constructors:Db#14,False,False
+191,FULL_ONLY,races,Db,717,37018,year of races,number,number_z=0.58984,2004-05-09,circuits:Db#3,False,False
+192,FULL_ONLY,races,Db,717,37018,round of races,number,number_z=-0.6875,2004-05-09,circuits:Db#3,False,False
+193,FULL_ONLY,races,Db,717,37018,name of races,text,Spanish Grand Prix,2004-05-09,circuits:Db#3,False,False
+194,FULL_ONLY,races,Db,717,37018,date of races,datetime,2004-05-09,2004-05-09,circuits:Db#3,False,False
+195,FULL_ONLY,races,Db,717,37018,time of races,text,00:00:00,2004-05-09,circuits:Db#3,False,False
+196,FULL_ONLY,circuits,Db,3,3,circuitRef of circuits,text,catalunya,,,False,False
+197,FULL_ONLY,circuits,Db,3,3,name of circuits,text,Circuit de Barcelona-Catalunya,,,False,False
+198,FULL_ONLY,circuits,Db,3,3,location of circuits,text,Montmeló,,,False,False
+199,FULL_ONLY,circuits,Db,3,3,country of circuits,text,Spain,,,False,False
+200,FULL_ONLY,circuits,Db,3,3,lat of circuits,number,number_z=0.35547,,,False,False
+201,FULL_ONLY,circuits,Db,3,3,lng of circuits,number,number_z=0.018066,,,False,False
+202,FULL_ONLY,circuits,Db,3,3,alt of circuits,number,number_z=-0.38086,,,False,False
+203,DRIVER_NBR_INDIRECT,standings,Db,24573,88055,points of standings,number,number_z=0.12695,2000-08-27,races:Db#658; drivers:Db#20,False,False
+204,DRIVER_NBR_INDIRECT,standings,Db,24573,88055,position of standings,number,number_z=-0.84766,2000-08-27,races:Db#658; drivers:Db#20,False,False
+205,DRIVER_NBR_INDIRECT,standings,Db,24573,88055,wins of standings,number,number_z=-0.27148,2000-08-27,races:Db#658; drivers:Db#20,False,False
+206,DRIVER_NBR_INDIRECT,standings,Db,24573,88055,date of standings,datetime,2000-08-27,2000-08-27,races:Db#658; drivers:Db#20,False,False
+207,FULL_ONLY,races,Db,658,36959,year of races,number,number_z=0.39258,2000-08-27,circuits:Db#12,False,False
+208,FULL_ONLY,races,Db,658,36959,round of races,number,number_z=0.88672,2000-08-27,circuits:Db#12,False,False
+209,FULL_ONLY,races,Db,658,36959,name of races,text,Belgian Grand Prix,2000-08-27,circuits:Db#12,False,False
+210,FULL_ONLY,races,Db,658,36959,date of races,datetime,2000-08-27,2000-08-27,circuits:Db#12,False,False
+211,FULL_ONLY,races,Db,658,36959,time of races,text,00:00:00,2000-08-27,circuits:Db#12,False,False
+212,FULL_ONLY,circuits,Db,12,12,circuitRef of circuits,text,spa,,,False,False
+213,FULL_ONLY,circuits,Db,12,12,name of circuits,text,Circuit de Spa-Francorchamps,,,False,False
+214,FULL_ONLY,circuits,Db,12,12,location of circuits,text,Spa,,,False,False
+215,FULL_ONLY,circuits,Db,12,12,country of circuits,text,Belgium,,,False,False
+216,FULL_ONLY,circuits,Db,12,12,lat of circuits,number,number_z=0.74609,,,False,False
+217,FULL_ONLY,circuits,Db,12,12,lng of circuits,number,number_z=0.074707,,,False,False
+218,FULL_ONLY,circuits,Db,12,12,alt of circuits,number,number_z=0.41797,,,False,False
+219,DRIVER_NBR_INDIRECT,results,Db,17051,54453,number of results,number,number_z=-0.45117,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+220,DRIVER_NBR_INDIRECT,results,Db,17051,54453,grid of results,number,number_z=0.25391,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+221,DRIVER_NBR_INDIRECT,results,Db,17051,54453,position of results,number,number_z=0.21484,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+222,DRIVER_NBR_INDIRECT,results,Db,17051,54453,positionOrder of results,number,number_z=-0.5,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+223,DRIVER_NBR_INDIRECT,results,Db,17051,54453,points of results,number,number_z=-0.45117,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+224,DRIVER_NBR_INDIRECT,results,Db,17051,54453,laps of results,number,number_z=0.30078,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+225,DRIVER_NBR_INDIRECT,results,Db,17051,54453,statusId of results,number,number_z=-0.24805,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+226,DRIVER_NBR_INDIRECT,results,Db,17051,54453,date of results,datetime,2000-10-22,2000-10-22,races:Db#662; drivers:Db#20; constructors:Db#21,False,False
+227,FULL_ONLY,races,Db,662,36963,year of races,number,number_z=0.39258,2000-10-22,circuits:Db#1,False,False
+228,FULL_ONLY,races,Db,662,36963,round of races,number,number_z=1.6719,2000-10-22,circuits:Db#1,False,False
+229,FULL_ONLY,races,Db,662,36963,name of races,text,Malaysian Grand Prix,2000-10-22,circuits:Db#1,False,False
+230,FULL_ONLY,races,Db,662,36963,date of races,datetime,2000-10-22,2000-10-22,circuits:Db#1,False,False
+231,FULL_ONLY,races,Db,662,36963,time of races,text,00:00:00,2000-10-22,circuits:Db#1,False,False
+232,FULL_ONLY,circuits,Db,1,1,circuitRef of circuits,text,sepang,,,False,False
+233,FULL_ONLY,circuits,Db,1,1,name of circuits,text,Sepang International Circuit,,,False,False
+234,FULL_ONLY,circuits,Db,1,1,location of circuits,text,Kuala Lumpur,,,False,False
+235,FULL_ONLY,circuits,Db,1,1,country of circuits,text,Malaysia,,,False,False
+236,FULL_ONLY,circuits,Db,1,1,lat of circuits,number,number_z=-1.3438,,,False,False
+237,FULL_ONLY,circuits,Db,1,1,lng of circuits,number,number_z=1.5391,,,False,False
+238,FULL_ONLY,circuits,Db,1,1,alt of circuits,number,number_z=-0.62891,,,False,False
+239,DRIVER_NBR_INDIRECT,results,Db,18322,55724,number of results,number,number_z=-0.45117,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+240,DRIVER_NBR_INDIRECT,results,Db,18322,55724,grid of results,number,number_z=1.2188,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+241,DRIVER_NBR_INDIRECT,results,Db,18322,55724,position of results,number,number_z=-0.4082,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+242,DRIVER_NBR_INDIRECT,results,Db,18322,55724,positionOrder of results,number,number_z=-0.89062,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+243,DRIVER_NBR_INDIRECT,results,Db,18322,55724,points of results,number,number_z=0.25977,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+244,DRIVER_NBR_INDIRECT,results,Db,18322,55724,laps of results,number,number_z=0.46875,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+245,DRIVER_NBR_INDIRECT,results,Db,18322,55724,milliseconds of results,number,number_z=-0.67188,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+246,DRIVER_NBR_INDIRECT,results,Db,18322,55724,fastestLap of results,number,number_z=-1.2266,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+247,DRIVER_NBR_INDIRECT,results,Db,18322,55724,rank of results,number,number_z=-0.87891,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+248,DRIVER_NBR_INDIRECT,results,Db,18322,55724,statusId of results,number,number_z=-0.62891,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+249,DRIVER_NBR_INDIRECT,results,Db,18322,55724,date of results,datetime,2004-07-11,2004-07-11,races:Db#723; drivers:Db#20; constructors:Db#14,False,False
+250,FULL_ONLY,races,Db,723,37024,year of races,number,number_z=0.58984,2004-07-11,circuits:Db#8,False,False
+251,FULL_ONLY,races,Db,723,37024,round of races,number,number_z=0.49414,2004-07-11,circuits:Db#8,False,False
+252,FULL_ONLY,races,Db,723,37024,name of races,text,British Grand Prix,2004-07-11,circuits:Db#8,False,False
+253,FULL_ONLY,races,Db,723,37024,date of races,datetime,2004-07-11,2004-07-11,circuits:Db#8,False,False
+254,FULL_ONLY,races,Db,723,37024,time of races,text,00:00:00,2004-07-11,circuits:Db#8,False,False
+255,DRIVER_NBR_INDIRECT,qualifying,Db,1730,28216,number of qualifying,number,number_z=-0.39844,2003-07-05,races:Db#706; drivers:Db#20; constructors:Db#16,False,False
+256,DRIVER_NBR_INDIRECT,qualifying,Db,1730,28216,position of qualifying,number,number_z=0.91406,2003-07-05,races:Db#706; drivers:Db#20; constructors:Db#16,False,False
+257,DRIVER_NBR_INDIRECT,qualifying,Db,1730,28216,date of qualifying,datetime,2003-07-05,2003-07-05,races:Db#706; drivers:Db#20; constructors:Db#16,False,False
+258,FULL_ONLY,races,Db,706,37007,year of races,number,number_z=0.53906,2003-07-06,circuits:Db#7,False,False
+259,FULL_ONLY,races,Db,706,37007,round of races,number,number_z=0.29688,2003-07-06,circuits:Db#7,False,False
+260,FULL_ONLY,races,Db,706,37007,name of races,text,French Grand Prix,2003-07-06,circuits:Db#7,False,False
+261,FULL_ONLY,races,Db,706,37007,date of races,datetime,2003-07-06,2003-07-06,circuits:Db#7,False,False
+262,FULL_ONLY,races,Db,706,37007,time of races,text,00:00:00,2003-07-06,circuits:Db#7,False,False
+263,DRIVER_NBR_INDIRECT,standings,Db,24846,88328,points of standings,number,number_z=-0.35156,2001-06-24,races:Db#671; drivers:Db#20,False,False
+264,DRIVER_NBR_INDIRECT,standings,Db,24846,88328,position of standings,number,number_z=-0.17676,2001-06-24,races:Db#671; drivers:Db#20,False,False
+265,DRIVER_NBR_INDIRECT,standings,Db,24846,88328,wins of standings,number,number_z=-0.27148,2001-06-24,races:Db#671; drivers:Db#20,False,False
+266,DRIVER_NBR_INDIRECT,standings,Db,24846,88328,date of standings,datetime,2001-06-24,2001-06-24,races:Db#671; drivers:Db#20,False,False
+267,FULL_ONLY,races,Db,671,36972,year of races,number,number_z=0.44336,2001-06-24,circuits:Db#19,False,False
+268,FULL_ONLY,races,Db,671,36972,round of races,number,number_z=0.099609,2001-06-24,circuits:Db#19,False,False
+269,FULL_ONLY,races,Db,671,36972,name of races,text,European Grand Prix,2001-06-24,circuits:Db#19,False,False
+270,FULL_ONLY,races,Db,671,36972,date of races,datetime,2001-06-24,2001-06-24,circuits:Db#19,False,False
+271,FULL_ONLY,races,Db,671,36972,time of races,text,00:00:00,2001-06-24,circuits:Db#19,False,False
+272,FULL_ONLY,circuits,Db,19,19,circuitRef of circuits,text,nurburgring,,,False,False
+273,FULL_ONLY,circuits,Db,19,19,name of circuits,text,Nürburgring,,,False,False
+274,FULL_ONLY,circuits,Db,19,19,location of circuits,text,Nürburg,,,False,False
+275,FULL_ONLY,circuits,Db,19,19,country of circuits,text,Germany,,,False,False
+276,FULL_ONLY,circuits,Db,19,19,lat of circuits,number,number_z=0.74219,,,False,False
+277,FULL_ONLY,circuits,Db,19,19,lng of circuits,number,number_z=0.089844,,,False,False
+278,FULL_ONLY,circuits,Db,19,19,alt of circuits,number,number_z=0.90234,,,False,False
+279,DRIVER_NBR_INDIRECT,qualifying,Db,897,27383,number of qualifying,number,number_z=0.16113,1996-05-04,races:Db#585; drivers:Db#20; constructors:Db#17,False,False
+280,DRIVER_NBR_INDIRECT,qualifying,Db,897,27383,position of qualifying,number,number_z=1.2344,1996-05-04,races:Db#585; drivers:Db#20; constructors:Db#17,False,False
+281,DRIVER_NBR_INDIRECT,qualifying,Db,897,27383,date of qualifying,datetime,1996-05-04,1996-05-04,races:Db#585; drivers:Db#20; constructors:Db#17,False,False
+282,FULL_ONLY,constructors,Db,17,25435,constructorRef of constructors,text,minardi,,,False,False
+283,FULL_ONLY,constructors,Db,17,25435,name of constructors,text,Minardi,,,False,False
+284,FULL_ONLY,constructors,Db,17,25435,nationality of constructors,text,Italian,,,False,False
+285,FULL_ONLY,races,Db,585,36886,year of races,number,number_z=0.19629,1996-05-05,circuits:Db#20,False,False
+286,FULL_ONLY,races,Db,585,36886,round of races,number,number_z=-0.6875,1996-05-05,circuits:Db#20,False,False
+287,FULL_ONLY,races,Db,585,36886,name of races,text,San Marino Grand Prix,1996-05-05,circuits:Db#20,False,False
+288,FULL_ONLY,races,Db,585,36886,date of races,datetime,1996-05-05,1996-05-05,circuits:Db#20,False,False
+289,FULL_ONLY,races,Db,585,36886,time of races,text,00:00:00,1996-05-05,circuits:Db#20,False,False
+290,FULL_ONLY,circuits,Db,20,20,circuitRef of circuits,text,imola,,,False,False
+291,FULL_ONLY,circuits,Db,20,20,name of circuits,text,Autodromo Enzo e Dino Ferrari,,,False,False
+292,FULL_ONLY,circuits,Db,20,20,location of circuits,text,Imola,,,False,False
+293,FULL_ONLY,circuits,Db,20,20,country of circuits,text,Italy,,,False,False
+294,FULL_ONLY,circuits,Db,20,20,lat of circuits,number,number_z=0.47852,,,False,False
+295,FULL_ONLY,circuits,Db,20,20,lng of circuits,number,number_z=0.16211,,,False,False
+296,FULL_ONLY,circuits,Db,20,20,alt of circuits,number,number_z=-0.57812,,,False,False
+297,DRIVER_NBR_INDIRECT,qualifying,Db,1929,28415,number of qualifying,number,number_z=-0.39844,2004-04-24,races:Db#716; drivers:Db#20; constructors:Db#14,False,False
+298,DRIVER_NBR_INDIRECT,qualifying,Db,1929,28415,position of qualifying,number,number_z=1.2344,2004-04-24,races:Db#716; drivers:Db#20; constructors:Db#14,False,False
+299,DRIVER_NBR_INDIRECT,qualifying,Db,1929,28415,date of qualifying,datetime,2004-04-24,2004-04-24,races:Db#716; drivers:Db#20; constructors:Db#14,False,False
+300,FULL_ONLY,races,Db,716,37017,year of races,number,number_z=0.58984,2004-04-25,circuits:Db#20,False,False
+301,FULL_ONLY,races,Db,716,37017,round of races,number,number_z=-0.88281,2004-04-25,circuits:Db#20,False,False
+302,FULL_ONLY,races,Db,716,37017,name of races,text,San Marino Grand Prix,2004-04-25,circuits:Db#20,False,False
+303,FULL_ONLY,races,Db,716,37017,date of races,datetime,2004-04-25,2004-04-25,circuits:Db#20,False,False
+304,FULL_ONLY,races,Db,716,37017,time of races,text,00:00:00,2004-04-25,circuits:Db#20,False,False
+305,DRIVER_NBR_INDIRECT,standings,Db,23640,87122,points of standings,number,number_z=0.18262,1997-10-26,races:Db#613; drivers:Db#20,False,False
+306,DRIVER_NBR_INDIRECT,standings,Db,23640,87122,position of standings,number,number_z=-0.72656,1997-10-26,races:Db#613; drivers:Db#20,False,False
+307,DRIVER_NBR_INDIRECT,standings,Db,23640,87122,wins of standings,number,number_z=-0.27148,1997-10-26,races:Db#613; drivers:Db#20,False,False
+308,DRIVER_NBR_INDIRECT,standings,Db,23640,87122,date of standings,datetime,1997-10-26,1997-10-26,races:Db#613; drivers:Db#20,False,False
+309,FULL_ONLY,races,Db,613,36914,year of races,number,number_z=0.24512,1997-10-26,circuits:Db#25,False,False
+310,FULL_ONLY,races,Db,613,36914,round of races,number,number_z=1.6719,1997-10-26,circuits:Db#25,False,False
+311,FULL_ONLY,races,Db,613,36914,name of races,text,European Grand Prix,1997-10-26,circuits:Db#25,False,False
+312,FULL_ONLY,races,Db,613,36914,date of races,datetime,1997-10-26,1997-10-26,circuits:Db#25,False,False
+313,FULL_ONLY,races,Db,613,36914,time of races,text,00:00:00,1997-10-26,circuits:Db#25,False,False
+314,FULL_ONLY,circuits,Db,25,25,circuitRef of circuits,text,jerez,,,False,False
+315,FULL_ONLY,circuits,Db,25,25,name of circuits,text,Circuito de Jerez,,,False,False
+316,FULL_ONLY,circuits,Db,25,25,location of circuits,text,Jerez de la Frontera,,,False,False
+317,FULL_ONLY,circuits,Db,25,25,country of circuits,text,Spain,,,False,False
+318,FULL_ONLY,circuits,Db,25,25,lat of circuits,number,number_z=0.14355,,,False,False
+319,FULL_ONLY,circuits,Db,25,25,lng of circuits,number,number_z=-0.1084,,,False,False
+320,FULL_ONLY,circuits,Db,25,25,alt of circuits,number,number_z=-0.57812,,,False,False
+321,DRIVER_NBR_INDIRECT,driver-dnf,Train,3569,101877,date of driver-dnf,datetime,2003-04-12,2003-04-12,drivers:Db#20,False,False
+322,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,3569,101877,did_not_finish of driver-dnf,boolean,1,2003-04-12,drivers:Db#20,False,False
+323,DRIVER_NBR_INDIRECT,qualifying,Db,1926,28412,number of qualifying,number,number_z=-0.39844,2004-04-03,races:Db#715; drivers:Db#20; constructors:Db#14,False,False
+324,DRIVER_NBR_INDIRECT,qualifying,Db,1926,28412,position of qualifying,number,number_z=-0.038818,2004-04-03,races:Db#715; drivers:Db#20; constructors:Db#14,False,False
+325,DRIVER_NBR_INDIRECT,qualifying,Db,1926,28412,date of qualifying,datetime,2004-04-03,2004-04-03,races:Db#715; drivers:Db#20; constructors:Db#14,False,False
+326,FULL_ONLY,races,Db,715,37016,year of races,number,number_z=0.58984,2004-04-04,circuits:Db#2,False,False
+327,FULL_ONLY,races,Db,715,37016,round of races,number,number_z=-1.0781,2004-04-04,circuits:Db#2,False,False
+328,FULL_ONLY,races,Db,715,37016,name of races,text,Bahrain Grand Prix,2004-04-04,circuits:Db#2,False,False
+329,FULL_ONLY,races,Db,715,37016,date of races,datetime,2004-04-04,2004-04-04,circuits:Db#2,False,False
+330,FULL_ONLY,races,Db,715,37016,time of races,text,00:00:00,2004-04-04,circuits:Db#2,False,False
+331,FULL_ONLY,circuits,Db,2,2,circuitRef of circuits,text,bahrain,,,False,False
+332,FULL_ONLY,circuits,Db,2,2,name of circuits,text,Bahrain International Circuit,,,False,False
+333,FULL_ONLY,circuits,Db,2,2,location of circuits,text,Sakhir,,,False,False
+334,FULL_ONLY,circuits,Db,2,2,country of circuits,text,Bahrain,,,False,False
+335,FULL_ONLY,circuits,Db,2,2,lat of circuits,number,number_z=-0.32422,,,False,False
+336,FULL_ONLY,circuits,Db,2,2,lng of circuits,number,number_z=0.75391,,,False,False
+337,FULL_ONLY,circuits,Db,2,2,alt of circuits,number,number_z=-0.66016,,,False,False
+338,DRIVER_NBR_INDIRECT,qualifying,Db,1999,28485,number of qualifying,number,number_z=-0.39844,2004-05-29,races:Db#719; drivers:Db#20; constructors:Db#14,False,False
+339,DRIVER_NBR_INDIRECT,qualifying,Db,1999,28485,position of qualifying,number,number_z=1.2344,2004-05-29,races:Db#719; drivers:Db#20; constructors:Db#14,False,False
+340,DRIVER_NBR_INDIRECT,qualifying,Db,1999,28485,date of qualifying,datetime,2004-05-29,2004-05-29,races:Db#719; drivers:Db#20; constructors:Db#14,False,False
+341,FULL_ONLY,races,Db,719,37020,year of races,number,number_z=0.58984,2004-05-30,circuits:Db#19,False,False
+342,FULL_ONLY,races,Db,719,37020,round of races,number,number_z=-0.29492,2004-05-30,circuits:Db#19,False,False
+343,FULL_ONLY,races,Db,719,37020,name of races,text,European Grand Prix,2004-05-30,circuits:Db#19,False,False
+344,FULL_ONLY,races,Db,719,37020,date of races,datetime,2004-05-30,2004-05-30,circuits:Db#19,False,False
+345,FULL_ONLY,races,Db,719,37020,time of races,text,00:00:00,2004-05-30,circuits:Db#19,False,False
+346,DRIVER_NBR_INDIRECT,standings,Db,24177,87659,points of standings,number,number_z=-0.013794,1999-08-15,races:Db#640; drivers:Db#20,False,False
+347,DRIVER_NBR_INDIRECT,standings,Db,24177,87659,position of standings,number,number_z=-0.78516,1999-08-15,races:Db#640; drivers:Db#20,False,False
+348,DRIVER_NBR_INDIRECT,standings,Db,24177,87659,wins of standings,number,number_z=-0.27148,1999-08-15,races:Db#640; drivers:Db#20,False,False
+349,DRIVER_NBR_INDIRECT,standings,Db,24177,87659,date of standings,datetime,1999-08-15,1999-08-15,races:Db#640; drivers:Db#20,False,False
+350,FULL_ONLY,races,Db,640,36941,year of races,number,number_z=0.34375,1999-08-15,circuits:Db#10,False,False
+351,FULL_ONLY,races,Db,640,36941,round of races,number,number_z=0.49414,1999-08-15,circuits:Db#10,False,False
+352,FULL_ONLY,races,Db,640,36941,name of races,text,Hungarian Grand Prix,1999-08-15,circuits:Db#10,False,False
+353,FULL_ONLY,races,Db,640,36941,date of races,datetime,1999-08-15,1999-08-15,circuits:Db#10,False,False
+354,FULL_ONLY,races,Db,640,36941,time of races,text,00:00:00,1999-08-15,circuits:Db#10,False,False
+355,DRIVER_NBR_INDIRECT,results,Db,16071,53473,number of results,number,number_z=-0.84766,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+356,DRIVER_NBR_INDIRECT,results,Db,16071,53473,grid of results,number,number_z=-0.99219,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+357,DRIVER_NBR_INDIRECT,results,Db,16071,53473,positionOrder of results,number,number_z=0.79688,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+358,DRIVER_NBR_INDIRECT,results,Db,16071,53473,points of results,number,number_z=-0.45117,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+359,DRIVER_NBR_INDIRECT,results,Db,16071,53473,laps of results,number,number_z=-0.60938,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+360,DRIVER_NBR_INDIRECT,results,Db,16071,53473,statusId of results,number,number_z=-0.51562,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+361,DRIVER_NBR_INDIRECT,results,Db,16071,53473,date of results,datetime,1998-05-10,1998-05-10,races:Db#618; drivers:Db#20; constructors:Db#21,False,False
+362,FULL_ONLY,races,Db,618,36919,year of races,number,number_z=0.29492,1998-05-10,circuits:Db#3,False,False
+363,FULL_ONLY,races,Db,618,36919,round of races,number,number_z=-0.6875,1998-05-10,circuits:Db#3,False,False
+364,FULL_ONLY,races,Db,618,36919,name of races,text,Spanish Grand Prix,1998-05-10,circuits:Db#3,False,False
+365,FULL_ONLY,races,Db,618,36919,date of races,datetime,1998-05-10,1998-05-10,circuits:Db#3,False,False
+366,FULL_ONLY,races,Db,618,36919,time of races,text,00:00:00,1998-05-10,circuits:Db#3,False,False
+367,DRIVER_NBR_INDIRECT,standings,Db,24010,87492,points of standings,number,number_z=-0.23828,1999-05-02,races:Db#632; drivers:Db#20,False,False
+368,DRIVER_NBR_INDIRECT,standings,Db,24010,87492,position of standings,number,number_z=-0.72656,1999-05-02,races:Db#632; drivers:Db#20,False,False
+369,DRIVER_NBR_INDIRECT,standings,Db,24010,87492,wins of standings,number,number_z=-0.27148,1999-05-02,races:Db#632; drivers:Db#20,False,False
+370,DRIVER_NBR_INDIRECT,standings,Db,24010,87492,date of standings,datetime,1999-05-02,1999-05-02,races:Db#632; drivers:Db#20,False,False
+371,FULL_ONLY,races,Db,632,36933,year of races,number,number_z=0.34375,1999-05-02,circuits:Db#20,False,False
+372,FULL_ONLY,races,Db,632,36933,round of races,number,number_z=-1.0781,1999-05-02,circuits:Db#20,False,False
+373,FULL_ONLY,races,Db,632,36933,name of races,text,San Marino Grand Prix,1999-05-02,circuits:Db#20,False,False
+374,FULL_ONLY,races,Db,632,36933,date of races,datetime,1999-05-02,1999-05-02,circuits:Db#20,False,False
+375,FULL_ONLY,races,Db,632,36933,time of races,text,00:00:00,1999-05-02,circuits:Db#20,False,False
+376,DRIVER_NBR_INDIRECT,driver-dnf,Train,1466,99774,date of driver-dnf,datetime,1998-04-08,1998-04-08,drivers:Db#20,False,False
+377,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,1466,99774,did_not_finish of driver-dnf,boolean,1,1998-04-08,drivers:Db#20,False,False
+378,DRIVER_NBR_INDIRECT,results,Db,16652,54054,number of results,number,number_z=-0.58203,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+379,DRIVER_NBR_INDIRECT,results,Db,16652,54054,grid of results,number,number_z=-0.023193,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+380,DRIVER_NBR_INDIRECT,results,Db,16652,54054,position of results,number,number_z=0.62891,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+381,DRIVER_NBR_INDIRECT,results,Db,16652,54054,positionOrder of results,number,number_z=-0.24121,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+382,DRIVER_NBR_INDIRECT,results,Db,16652,54054,points of results,number,number_z=-0.45117,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+383,DRIVER_NBR_INDIRECT,results,Db,16652,54054,laps of results,number,number_z=0.19922,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+384,DRIVER_NBR_INDIRECT,results,Db,16652,54054,statusId of results,number,number_z=-0.13281,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+385,DRIVER_NBR_INDIRECT,results,Db,16652,54054,date of results,datetime,1999-10-17,1999-10-17,races:Db#644; drivers:Db#20; constructors:Db#21,False,False
+386,FULL_ONLY,races,Db,644,36945,year of races,number,number_z=0.34375,1999-10-17,circuits:Db#1,False,False
+387,FULL_ONLY,races,Db,644,36945,round of races,number,number_z=1.2812,1999-10-17,circuits:Db#1,False,False
+388,FULL_ONLY,races,Db,644,36945,name of races,text,Malaysian Grand Prix,1999-10-17,circuits:Db#1,False,False
+389,FULL_ONLY,races,Db,644,36945,date of races,datetime,1999-10-17,1999-10-17,circuits:Db#1,False,False
+390,FULL_ONLY,races,Db,644,36945,time of races,text,00:00:00,1999-10-17,circuits:Db#1,False,False
+391,DRIVER_NBR_INDIRECT,standings,Db,23860,87342,points of standings,number,number_z=0.04248,1998-08-02,races:Db#624; drivers:Db#20,False,False
+392,DRIVER_NBR_INDIRECT,standings,Db,23860,87342,position of standings,number,number_z=-0.78516,1998-08-02,races:Db#624; drivers:Db#20,False,False
+393,DRIVER_NBR_INDIRECT,standings,Db,23860,87342,wins of standings,number,number_z=-0.27148,1998-08-02,races:Db#624; drivers:Db#20,False,False
+394,DRIVER_NBR_INDIRECT,standings,Db,23860,87342,date of standings,datetime,1998-08-02,1998-08-02,races:Db#624; drivers:Db#20,False,False
+395,FULL_ONLY,races,Db,624,36925,year of races,number,number_z=0.29492,1998-08-02,circuits:Db#9,False,False
+396,FULL_ONLY,races,Db,624,36925,round of races,number,number_z=0.49414,1998-08-02,circuits:Db#9,False,False
+397,FULL_ONLY,races,Db,624,36925,name of races,text,German Grand Prix,1998-08-02,circuits:Db#9,False,False
+398,FULL_ONLY,races,Db,624,36925,date of races,datetime,1998-08-02,1998-08-02,circuits:Db#9,False,False
+399,FULL_ONLY,races,Db,624,36925,time of races,text,00:00:00,1998-08-02,circuits:Db#9,False,False
+400,FULL_ONLY,circuits,Db,9,9,circuitRef of circuits,text,hockenheimring,,,False,False
+401,FULL_ONLY,circuits,Db,9,9,name of circuits,text,Hockenheimring,,,False,False
+402,FULL_ONLY,circuits,Db,9,9,location of circuits,text,Hockenheim,,,False,False
+403,FULL_ONLY,circuits,Db,9,9,country of circuits,text,Germany,,,False,False
+404,FULL_ONLY,circuits,Db,9,9,lat of circuits,number,number_z=0.69531,,,False,False
+405,FULL_ONLY,circuits,Db,9,9,lng of circuits,number,number_z=0.11426,,,False,False
+406,FULL_ONLY,circuits,Db,9,9,alt of circuits,number,number_z=-0.39844,,,False,False
+407,DRIVER_NBR_INDIRECT,standings,Db,23052,86534,points of standings,number,number_z=-0.37891,1996-06-02,races:Db#587; drivers:Db#20,False,False
+408,DRIVER_NBR_INDIRECT,standings,Db,23052,86534,position of standings,number,number_z=0.12793,1996-06-02,races:Db#587; drivers:Db#20,False,False
+409,DRIVER_NBR_INDIRECT,standings,Db,23052,86534,wins of standings,number,number_z=-0.27148,1996-06-02,races:Db#587; drivers:Db#20,False,False
+410,DRIVER_NBR_INDIRECT,standings,Db,23052,86534,date of standings,datetime,1996-06-02,1996-06-02,races:Db#587; drivers:Db#20,False,False
+411,FULL_ONLY,races,Db,587,36888,year of races,number,number_z=0.19629,1996-06-02,circuits:Db#3,False,False
+412,FULL_ONLY,races,Db,587,36888,round of races,number,number_z=-0.29492,1996-06-02,circuits:Db#3,False,False
+413,FULL_ONLY,races,Db,587,36888,name of races,text,Spanish Grand Prix,1996-06-02,circuits:Db#3,False,False
+414,FULL_ONLY,races,Db,587,36888,date of races,datetime,1996-06-02,1996-06-02,circuits:Db#3,False,False
+415,FULL_ONLY,races,Db,587,36888,time of races,text,00:00:00,1996-06-02,circuits:Db#3,False,False
+416,DRIVER_NBR_INDIRECT,standings,Db,25347,88829,points of standings,number,number_z=-0.18262,2002-09-15,races:Db#694; drivers:Db#20,False,False
+417,DRIVER_NBR_INDIRECT,standings,Db,25347,88829,position of standings,number,number_z=-0.54297,2002-09-15,races:Db#694; drivers:Db#20,False,False
+418,DRIVER_NBR_INDIRECT,standings,Db,25347,88829,wins of standings,number,number_z=-0.27148,2002-09-15,races:Db#694; drivers:Db#20,False,False
+419,DRIVER_NBR_INDIRECT,standings,Db,25347,88829,date of standings,datetime,2002-09-15,2002-09-15,races:Db#694; drivers:Db#20,False,False
+420,FULL_ONLY,races,Db,694,36995,year of races,number,number_z=0.49219,2002-09-15,circuits:Db#13,False,False
+421,FULL_ONLY,races,Db,694,36995,round of races,number,number_z=1.2812,2002-09-15,circuits:Db#13,False,False
+422,FULL_ONLY,races,Db,694,36995,name of races,text,Italian Grand Prix,2002-09-15,circuits:Db#13,False,False
+423,FULL_ONLY,races,Db,694,36995,date of races,datetime,2002-09-15,2002-09-15,circuits:Db#13,False,False
+424,FULL_ONLY,races,Db,694,36995,time of races,text,00:00:00,2002-09-15,circuits:Db#13,False,False
+425,FULL_ONLY,circuits,Db,13,13,circuitRef of circuits,text,monza,,,False,False
+426,FULL_ONLY,circuits,Db,13,13,name of circuits,text,Autodromo Nazionale di Monza,,,False,False
+427,FULL_ONLY,circuits,Db,13,13,location of circuits,text,Monza,,,False,False
+428,FULL_ONLY,circuits,Db,13,13,country of circuits,text,Italy,,,False,False
+429,FULL_ONLY,circuits,Db,13,13,lat of circuits,number,number_z=0.53516,,,False,False
+430,FULL_ONLY,circuits,Db,13,13,lng of circuits,number,number_z=0.125,,,False,False
+431,FULL_ONLY,circuits,Db,13,13,alt of circuits,number,number_z=-0.23633,,,False,False
+432,DRIVER_NBR_INDIRECT,standings,Db,24245,87727,points of standings,number,number_z=-0.013794,1999-09-26,races:Db#643; drivers:Db#20,False,False
+433,DRIVER_NBR_INDIRECT,standings,Db,24245,87727,position of standings,number,number_z=-0.72656,1999-09-26,races:Db#643; drivers:Db#20,False,False
+434,DRIVER_NBR_INDIRECT,standings,Db,24245,87727,wins of standings,number,number_z=-0.27148,1999-09-26,races:Db#643; drivers:Db#20,False,False
+435,DRIVER_NBR_INDIRECT,standings,Db,24245,87727,date of standings,datetime,1999-09-26,1999-09-26,races:Db#643; drivers:Db#20,False,False
+436,FULL_ONLY,races,Db,643,36944,year of races,number,number_z=0.34375,1999-09-26,circuits:Db#19,False,False
+437,FULL_ONLY,races,Db,643,36944,round of races,number,number_z=1.0859,1999-09-26,circuits:Db#19,False,False
+438,FULL_ONLY,races,Db,643,36944,name of races,text,European Grand Prix,1999-09-26,circuits:Db#19,False,False
+439,FULL_ONLY,races,Db,643,36944,date of races,datetime,1999-09-26,1999-09-26,circuits:Db#19,False,False
+440,FULL_ONLY,races,Db,643,36944,time of races,text,00:00:00,1999-09-26,circuits:Db#19,False,False
+441,DRIVER_NBR_INDIRECT,results,Db,15778,53180,number of results,number,number_z=-0.38672,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+442,DRIVER_NBR_INDIRECT,results,Db,15778,53180,grid of results,number,number_z=-0.023193,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+443,DRIVER_NBR_INDIRECT,results,Db,15778,53180,position of results,number,number_z=0.21484,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+444,DRIVER_NBR_INDIRECT,results,Db,15778,53180,positionOrder of results,number,number_z=-0.5,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+445,DRIVER_NBR_INDIRECT,results,Db,15778,53180,points of results,number,number_z=-0.45117,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+446,DRIVER_NBR_INDIRECT,results,Db,15778,53180,laps of results,number,number_z=0.83984,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+447,DRIVER_NBR_INDIRECT,results,Db,15778,53180,statusId of results,number,number_z=-0.24805,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+448,DRIVER_NBR_INDIRECT,results,Db,15778,53180,date of results,datetime,1997-06-29,1997-06-29,races:Db#604; drivers:Db#20; constructors:Db#16,False,False
+449,FULL_ONLY,races,Db,604,36905,year of races,number,number_z=0.24512,1997-06-29,circuits:Db#7,False,False
+450,FULL_ONLY,races,Db,604,36905,round of races,number,number_z=-0.097168,1997-06-29,circuits:Db#7,False,False
+451,FULL_ONLY,races,Db,604,36905,name of races,text,French Grand Prix,1997-06-29,circuits:Db#7,False,False
+452,FULL_ONLY,races,Db,604,36905,date of races,datetime,1997-06-29,1997-06-29,circuits:Db#7,False,False
+453,FULL_ONLY,races,Db,604,36905,time of races,text,00:00:00,1997-06-29,circuits:Db#7,False,False
+454,DRIVER_NBR_INDIRECT,results,Db,16927,54329,number of results,number,number_z=-0.45117,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+455,DRIVER_NBR_INDIRECT,results,Db,16927,54329,grid of results,number,number_z=-0.57812,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+456,DRIVER_NBR_INDIRECT,results,Db,16927,54329,positionOrder of results,number,number_z=0.92969,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+457,DRIVER_NBR_INDIRECT,results,Db,16927,54329,points of results,number,number_z=-0.45117,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+458,DRIVER_NBR_INDIRECT,results,Db,16927,54329,laps of results,number,number_z=-0.50781,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+459,DRIVER_NBR_INDIRECT,results,Db,16927,54329,statusId of results,number,number_z=0.21094,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+460,DRIVER_NBR_INDIRECT,results,Db,16927,54329,date of results,datetime,2000-08-13,2000-08-13,races:Db#657; drivers:Db#20; constructors:Db#21,False,False
+461,FULL_ONLY,races,Db,657,36958,year of races,number,number_z=0.39258,2000-08-13,circuits:Db#10,False,False
+462,FULL_ONLY,races,Db,657,36958,round of races,number,number_z=0.69141,2000-08-13,circuits:Db#10,False,False
+463,FULL_ONLY,races,Db,657,36958,name of races,text,Hungarian Grand Prix,2000-08-13,circuits:Db#10,False,False
+464,FULL_ONLY,races,Db,657,36958,date of races,datetime,2000-08-13,2000-08-13,circuits:Db#10,False,False
+465,FULL_ONLY,races,Db,657,36958,time of races,text,00:00:00,2000-08-13,circuits:Db#10,False,False
+466,DRIVER_NBR_INDIRECT,standings,Db,23484,86966,points of standings,number,number_z=-0.1543,1997-08-10,races:Db#607; drivers:Db#20,False,False
+467,DRIVER_NBR_INDIRECT,standings,Db,23484,86966,position of standings,number,number_z=-0.48242,1997-08-10,races:Db#607; drivers:Db#20,False,False
+468,DRIVER_NBR_INDIRECT,standings,Db,23484,86966,wins of standings,number,number_z=-0.27148,1997-08-10,races:Db#607; drivers:Db#20,False,False
+469,DRIVER_NBR_INDIRECT,standings,Db,23484,86966,date of standings,datetime,1997-08-10,1997-08-10,races:Db#607; drivers:Db#20,False,False
+470,DRIVER_NBR_INDIRECT,results,Db,17573,54975,number of results,number,number_z=-0.58203,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+471,DRIVER_NBR_INDIRECT,results,Db,17573,54975,grid of results,number,number_z=-0.023193,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+472,DRIVER_NBR_INDIRECT,results,Db,17573,54975,position of results,number,number_z=-0.61719,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+473,DRIVER_NBR_INDIRECT,results,Db,17573,54975,positionOrder of results,number,number_z=-1.0234,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+474,DRIVER_NBR_INDIRECT,results,Db,17573,54975,points of results,number,number_z=0.022095,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+475,DRIVER_NBR_INDIRECT,results,Db,17573,54975,laps of results,number,number_z=1.0391,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+476,DRIVER_NBR_INDIRECT,results,Db,17573,54975,statusId of results,number,number_z=-0.24805,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+477,DRIVER_NBR_INDIRECT,results,Db,17573,54975,date of results,datetime,2002-05-26,2002-05-26,races:Db#686; drivers:Db#20; constructors:Db#16,False,False
+478,FULL_ONLY,races,Db,686,36987,year of races,number,number_z=0.49219,2002-05-26,circuits:Db#5,False,False
+479,FULL_ONLY,races,Db,686,36987,round of races,number,number_z=-0.29492,2002-05-26,circuits:Db#5,False,False
+480,FULL_ONLY,races,Db,686,36987,name of races,text,Monaco Grand Prix,2002-05-26,circuits:Db#5,False,False
+481,FULL_ONLY,races,Db,686,36987,date of races,datetime,2002-05-26,2002-05-26,circuits:Db#5,False,False
+482,FULL_ONLY,races,Db,686,36987,time of races,text,00:00:00,2002-05-26,circuits:Db#5,False,False
+483,DRIVER_NBR_INDIRECT,results,Db,16345,53747,number of results,number,number_z=-0.58203,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+484,DRIVER_NBR_INDIRECT,results,Db,16345,53747,grid of results,number,number_z=-0.57812,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+485,DRIVER_NBR_INDIRECT,results,Db,16345,53747,position of results,number,number_z=-0.82422,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+486,DRIVER_NBR_INDIRECT,results,Db,16345,53747,positionOrder of results,number,number_z=-1.1484,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+487,DRIVER_NBR_INDIRECT,results,Db,16345,53747,points of results,number,number_z=0.25977,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+488,DRIVER_NBR_INDIRECT,results,Db,16345,53747,laps of results,number,number_z=0.36719,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+489,DRIVER_NBR_INDIRECT,results,Db,16345,53747,milliseconds of results,number,number_z=-0.29102,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+490,DRIVER_NBR_INDIRECT,results,Db,16345,53747,statusId of results,number,number_z=-0.62891,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+491,DRIVER_NBR_INDIRECT,results,Db,16345,53747,date of results,datetime,1999-03-07,1999-03-07,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+492,FULL_ONLY,races,Db,630,36931,year of races,number,number_z=0.34375,1999-03-07,circuits:Db#0,False,False
+493,FULL_ONLY,races,Db,630,36931,round of races,number,number_z=-1.4766,1999-03-07,circuits:Db#0,False,False
+494,FULL_ONLY,races,Db,630,36931,name of races,text,Australian Grand Prix,1999-03-07,circuits:Db#0,False,False
+495,FULL_ONLY,races,Db,630,36931,date of races,datetime,1999-03-07,1999-03-07,circuits:Db#0,False,False
+496,FULL_ONLY,races,Db,630,36931,time of races,text,00:00:00,1999-03-07,circuits:Db#0,False,False
+497,DRIVER_NBR_INDIRECT,standings,Db,24028,87510,points of standings,number,number_z=-0.18262,1999-05-16,races:Db#633; drivers:Db#20,False,False
+498,DRIVER_NBR_INDIRECT,standings,Db,24028,87510,position of standings,number,number_z=-0.84766,1999-05-16,races:Db#633; drivers:Db#20,False,False
+499,DRIVER_NBR_INDIRECT,standings,Db,24028,87510,wins of standings,number,number_z=-0.27148,1999-05-16,races:Db#633; drivers:Db#20,False,False
+500,DRIVER_NBR_INDIRECT,standings,Db,24028,87510,date of standings,datetime,1999-05-16,1999-05-16,races:Db#633; drivers:Db#20,False,False
+501,FULL_ONLY,races,Db,633,36934,year of races,number,number_z=0.34375,1999-05-16,circuits:Db#5,False,False
+502,FULL_ONLY,races,Db,633,36934,round of races,number,number_z=-0.88281,1999-05-16,circuits:Db#5,False,False
+503,FULL_ONLY,races,Db,633,36934,name of races,text,Monaco Grand Prix,1999-05-16,circuits:Db#5,False,False
+504,FULL_ONLY,races,Db,633,36934,date of races,datetime,1999-05-16,1999-05-16,circuits:Db#5,False,False
+505,FULL_ONLY,races,Db,633,36934,time of races,text,00:00:00,1999-05-16,circuits:Db#5,False,False
+506,DRIVER_NBR_INDIRECT,driver-dnf,Train,8671,106979,date of driver-dnf,datetime,1996-02-18,1996-02-18,drivers:Db#20,False,False
+507,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,8671,106979,did_not_finish of driver-dnf,boolean,1,1996-02-18,drivers:Db#20,False,False
+508,DRIVER_NBR_INDIRECT,results,Db,15640,53042,number of results,number,number_z=-0.38672,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+509,DRIVER_NBR_INDIRECT,results,Db,15640,53042,grid of results,number,number_z=-0.57812,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+510,DRIVER_NBR_INDIRECT,results,Db,15640,53042,position of results,number,number_z=0.006958,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+511,DRIVER_NBR_INDIRECT,results,Db,15640,53042,positionOrder of results,number,number_z=-0.62891,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+512,DRIVER_NBR_INDIRECT,results,Db,15640,53042,points of results,number,number_z=-0.45117,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+513,DRIVER_NBR_INDIRECT,results,Db,15640,53042,laps of results,number,number_z=0.87109,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+514,DRIVER_NBR_INDIRECT,results,Db,15640,53042,milliseconds of results,number,number_z=-0.23438,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+515,DRIVER_NBR_INDIRECT,results,Db,15640,53042,statusId of results,number,number_z=-0.62891,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+516,DRIVER_NBR_INDIRECT,results,Db,15640,53042,date of results,datetime,1997-03-30,1997-03-30,races:Db#598; drivers:Db#20; constructors:Db#16,False,False
+517,FULL_ONLY,races,Db,598,36899,year of races,number,number_z=0.24512,1997-03-30,circuits:Db#17,False,False
+518,FULL_ONLY,races,Db,598,36899,round of races,number,number_z=-1.2812,1997-03-30,circuits:Db#17,False,False
+519,FULL_ONLY,races,Db,598,36899,name of races,text,Brazilian Grand Prix,1997-03-30,circuits:Db#17,False,False
+520,FULL_ONLY,races,Db,598,36899,date of races,datetime,1997-03-30,1997-03-30,circuits:Db#17,False,False
+521,FULL_ONLY,races,Db,598,36899,time of races,text,00:00:00,1997-03-30,circuits:Db#17,False,False
+522,FULL_ONLY,circuits,Db,17,17,circuitRef of circuits,text,interlagos,,,False,False
+523,FULL_ONLY,circuits,Db,17,17,name of circuits,text,Autódromo José Carlos Pace,,,False,False
+524,FULL_ONLY,circuits,Db,17,17,location of circuits,text,São Paulo,,,False,False
+525,FULL_ONLY,circuits,Db,17,17,country of circuits,text,Brazil,,,False,False
+526,FULL_ONLY,circuits,Db,17,17,lat of circuits,number,number_z=-2.5,,,False,False
+527,FULL_ONLY,circuits,Db,17,17,lng of circuits,number,number_z=-0.73047,,,False,False
+528,FULL_ONLY,circuits,Db,17,17,alt of circuits,number,number_z=1.4688,,,False,False
+529,DRIVER_NBR_INDIRECT,standings,Db,23681,87163,points of standings,number,number_z=-0.35156,1998-04-12,races:Db#616; drivers:Db#20,False,False
+530,DRIVER_NBR_INDIRECT,standings,Db,23681,87163,position of standings,number,number_z=-0.66406,1998-04-12,races:Db#616; drivers:Db#20,False,False
+531,DRIVER_NBR_INDIRECT,standings,Db,23681,87163,wins of standings,number,number_z=-0.27148,1998-04-12,races:Db#616; drivers:Db#20,False,False
+532,DRIVER_NBR_INDIRECT,standings,Db,23681,87163,date of standings,datetime,1998-04-12,1998-04-12,races:Db#616; drivers:Db#20,False,False
+533,FULL_ONLY,races,Db,616,36917,year of races,number,number_z=0.29492,1998-04-12,circuits:Db#24,False,False
+534,FULL_ONLY,races,Db,616,36917,round of races,number,number_z=-1.0781,1998-04-12,circuits:Db#24,False,False
+535,FULL_ONLY,races,Db,616,36917,name of races,text,Argentine Grand Prix,1998-04-12,circuits:Db#24,False,False
+536,FULL_ONLY,races,Db,616,36917,date of races,datetime,1998-04-12,1998-04-12,circuits:Db#24,False,False
+537,FULL_ONLY,races,Db,616,36917,time of races,text,00:00:00,1998-04-12,circuits:Db#24,False,False
+538,FULL_ONLY,circuits,Db,24,24,circuitRef of circuits,text,galvez,,,False,False
+539,FULL_ONLY,circuits,Db,24,24,name of circuits,text,Autódromo Juan y Oscar Gálvez,,,False,False
+540,FULL_ONLY,circuits,Db,24,24,location of circuits,text,Buenos Aires,,,False,False
+541,FULL_ONLY,circuits,Db,24,24,country of circuits,text,Argentina,,,False,False
+542,FULL_ONLY,circuits,Db,24,24,lat of circuits,number,number_z=-2.9844,,,False,False
+543,FULL_ONLY,circuits,Db,24,24,lng of circuits,number,number_z=-0.91016,,,False,False
+544,FULL_ONLY,circuits,Db,24,24,alt of circuits,number,number_z=-0.65625,,,False,False
+545,DRIVER_NBR_INDIRECT,driver-dnf,Train,70,98378,date of driver-dnf,datetime,1998-06-07,1998-06-07,drivers:Db#20,False,False
+546,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,70,98378,did_not_finish of driver-dnf,boolean,1,1998-06-07,drivers:Db#20,False,False
+547,DRIVER_NBR_INDIRECT,standings,Db,25556,89038,points of standings,number,number_z=-0.098145,2003-06-29,races:Db#705; drivers:Db#20,False,False
+548,DRIVER_NBR_INDIRECT,standings,Db,25556,89038,position of standings,number,number_z=-0.66406,2003-06-29,races:Db#705; drivers:Db#20,False,False
+549,DRIVER_NBR_INDIRECT,standings,Db,25556,89038,wins of standings,number,number_z=0.73438,2003-06-29,races:Db#705; drivers:Db#20,False,False
+550,DRIVER_NBR_INDIRECT,standings,Db,25556,89038,date of standings,datetime,2003-06-29,2003-06-29,races:Db#705; drivers:Db#20,False,False
+551,FULL_ONLY,races,Db,705,37006,year of races,number,number_z=0.53906,2003-06-29,circuits:Db#19,False,False
+552,FULL_ONLY,races,Db,705,37006,round of races,number,number_z=0.099609,2003-06-29,circuits:Db#19,False,False
+553,FULL_ONLY,races,Db,705,37006,name of races,text,European Grand Prix,2003-06-29,circuits:Db#19,False,False
+554,FULL_ONLY,races,Db,705,37006,date of races,datetime,2003-06-29,2003-06-29,circuits:Db#19,False,False
+555,FULL_ONLY,races,Db,705,37006,time of races,text,00:00:00,2003-06-29,circuits:Db#19,False,False
+556,DRIVER_NBR_INDIRECT,standings,Db,24533,88015,points of standings,number,number_z=0.12695,2000-07-30,races:Db#656; drivers:Db#20,False,False
+557,DRIVER_NBR_INDIRECT,standings,Db,24533,88015,position of standings,number,number_z=-0.91016,2000-07-30,races:Db#656; drivers:Db#20,False,False
+558,DRIVER_NBR_INDIRECT,standings,Db,24533,88015,wins of standings,number,number_z=-0.27148,2000-07-30,races:Db#656; drivers:Db#20,False,False
+559,DRIVER_NBR_INDIRECT,standings,Db,24533,88015,date of standings,datetime,2000-07-30,2000-07-30,races:Db#656; drivers:Db#20,False,False
+560,FULL_ONLY,races,Db,656,36957,year of races,number,number_z=0.39258,2000-07-30,circuits:Db#9,False,False
+561,FULL_ONLY,races,Db,656,36957,round of races,number,number_z=0.49414,2000-07-30,circuits:Db#9,False,False
+562,FULL_ONLY,races,Db,656,36957,name of races,text,German Grand Prix,2000-07-30,circuits:Db#9,False,False
+563,FULL_ONLY,races,Db,656,36957,date of races,datetime,2000-07-30,2000-07-30,circuits:Db#9,False,False
+564,FULL_ONLY,races,Db,656,36957,time of races,text,00:00:00,2000-07-30,circuits:Db#9,False,False
+565,DRIVER_NBR_INDIRECT,standings,Db,24505,87987,points of standings,number,number_z=0.12695,2000-07-16,races:Db#655; drivers:Db#20,False,False
+566,DRIVER_NBR_INDIRECT,standings,Db,24505,87987,position of standings,number,number_z=-0.91016,2000-07-16,races:Db#655; drivers:Db#20,False,False
+567,DRIVER_NBR_INDIRECT,standings,Db,24505,87987,wins of standings,number,number_z=-0.27148,2000-07-16,races:Db#655; drivers:Db#20,False,False
+568,DRIVER_NBR_INDIRECT,standings,Db,24505,87987,date of standings,datetime,2000-07-16,2000-07-16,races:Db#655; drivers:Db#20,False,False
+569,FULL_ONLY,races,Db,655,36956,year of races,number,number_z=0.39258,2000-07-16,circuits:Db#69,False,False
+570,FULL_ONLY,races,Db,655,36956,round of races,number,number_z=0.29688,2000-07-16,circuits:Db#69,False,False
+571,FULL_ONLY,races,Db,655,36956,name of races,text,Austrian Grand Prix,2000-07-16,circuits:Db#69,False,False
+572,FULL_ONLY,races,Db,655,36956,date of races,datetime,2000-07-16,2000-07-16,circuits:Db#69,False,False
+573,FULL_ONLY,races,Db,655,36956,time of races,text,00:00:00,2000-07-16,circuits:Db#69,False,False
+574,DRIVER_NBR_INDIRECT,results,Db,16101,53503,number of results,number,number_z=-0.84766,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+575,DRIVER_NBR_INDIRECT,results,Db,16101,53503,grid of results,number,number_z=-1.1328,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+576,DRIVER_NBR_INDIRECT,results,Db,16101,53503,position of results,number,number_z=-1.2422,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+577,DRIVER_NBR_INDIRECT,results,Db,16101,53503,positionOrder of results,number,number_z=-1.4062,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+578,DRIVER_NBR_INDIRECT,results,Db,16101,53503,points of results,number,number_z=0.96875,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+579,DRIVER_NBR_INDIRECT,results,Db,16101,53503,laps of results,number,number_z=1.0703,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+580,DRIVER_NBR_INDIRECT,results,Db,16101,53503,milliseconds of results,number,number_z=0.28516,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+581,DRIVER_NBR_INDIRECT,results,Db,16101,53503,statusId of results,number,number_z=-0.62891,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+582,DRIVER_NBR_INDIRECT,results,Db,16101,53503,date of results,datetime,1998-05-24,1998-05-24,races:Db#619; drivers:Db#20; constructors:Db#21,False,False
+583,FULL_ONLY,races,Db,619,36920,year of races,number,number_z=0.29492,1998-05-24,circuits:Db#5,False,False
+584,FULL_ONLY,races,Db,619,36920,round of races,number,number_z=-0.49023,1998-05-24,circuits:Db#5,False,False
+585,FULL_ONLY,races,Db,619,36920,name of races,text,Monaco Grand Prix,1998-05-24,circuits:Db#5,False,False
+586,FULL_ONLY,races,Db,619,36920,date of races,datetime,1998-05-24,1998-05-24,circuits:Db#5,False,False
+587,FULL_ONLY,races,Db,619,36920,time of races,text,00:00:00,1998-05-24,circuits:Db#5,False,False
+588,DRIVER_NBR_INDIRECT,standings,Db,22991,86473,points of standings,number,number_z=-0.37891,1996-05-05,races:Db#585; drivers:Db#20,False,False
+589,DRIVER_NBR_INDIRECT,standings,Db,22991,86473,position of standings,number,number_z=0.12793,1996-05-05,races:Db#585; drivers:Db#20,False,False
+590,DRIVER_NBR_INDIRECT,standings,Db,22991,86473,wins of standings,number,number_z=-0.27148,1996-05-05,races:Db#585; drivers:Db#20,False,False
+591,DRIVER_NBR_INDIRECT,standings,Db,22991,86473,date of standings,datetime,1996-05-05,1996-05-05,races:Db#585; drivers:Db#20,False,False
+592,DRIVER_NBR_INDIRECT,driver-dnf,Train,7280,105588,date of driver-dnf,datetime,1997-03-14,1997-03-14,drivers:Db#20,False,False
+593,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,7280,105588,did_not_finish of driver-dnf,boolean,1,1997-03-14,drivers:Db#20,False,False
+594,DRIVER_NBR_INDIRECT,driver-dnf,Train,10748,109056,date of driver-dnf,datetime,2000-07-26,2000-07-26,drivers:Db#20,False,False
+595,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,10748,109056,did_not_finish of driver-dnf,boolean,1,2000-07-26,drivers:Db#20,False,False
+596,DRIVER_NBR_INDIRECT,results,Db,16533,53935,number of results,number,number_z=-0.58203,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+597,DRIVER_NBR_INDIRECT,results,Db,16533,53935,grid of results,number,number_z=-0.16113,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+598,DRIVER_NBR_INDIRECT,results,Db,16533,53935,positionOrder of results,number,number_z=0.79688,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+599,DRIVER_NBR_INDIRECT,results,Db,16533,53935,points of results,number,number_z=-0.45117,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+600,DRIVER_NBR_INDIRECT,results,Db,16533,53935,laps of results,number,number_z=-1.3125,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+601,DRIVER_NBR_INDIRECT,results,Db,16533,53935,statusId of results,number,number_z=0.17285,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+602,DRIVER_NBR_INDIRECT,results,Db,16533,53935,date of results,datetime,1999-08-01,1999-08-01,races:Db#639; drivers:Db#20; constructors:Db#21,False,False
+603,FULL_ONLY,races,Db,639,36940,year of races,number,number_z=0.34375,1999-08-01,circuits:Db#9,False,False
+604,FULL_ONLY,races,Db,639,36940,round of races,number,number_z=0.29688,1999-08-01,circuits:Db#9,False,False
+605,FULL_ONLY,races,Db,639,36940,name of races,text,German Grand Prix,1999-08-01,circuits:Db#9,False,False
+606,FULL_ONLY,races,Db,639,36940,date of races,datetime,1999-08-01,1999-08-01,circuits:Db#9,False,False
+607,FULL_ONLY,races,Db,639,36940,time of races,text,00:00:00,1999-08-01,circuits:Db#9,False,False
+608,DRIVER_NBR_INDIRECT,results,Db,16666,54068,number of results,number,number_z=-0.58203,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+609,DRIVER_NBR_INDIRECT,results,Db,16666,54068,grid of results,number,number_z=0.39258,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+610,DRIVER_NBR_INDIRECT,results,Db,16666,54068,position of results,number,number_z=1.25,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+611,DRIVER_NBR_INDIRECT,results,Db,16666,54068,positionOrder of results,number,number_z=0.14844,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+612,DRIVER_NBR_INDIRECT,results,Db,16666,54068,points of results,number,number_z=-0.45117,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+613,DRIVER_NBR_INDIRECT,results,Db,16666,54068,laps of results,number,number_z=0.031006,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+614,DRIVER_NBR_INDIRECT,results,Db,16666,54068,statusId of results,number,number_z=-0.47656,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+615,DRIVER_NBR_INDIRECT,results,Db,16666,54068,date of results,datetime,1999-10-31,1999-10-31,races:Db#645; drivers:Db#20; constructors:Db#21,False,False
+616,FULL_ONLY,races,Db,645,36946,year of races,number,number_z=0.34375,1999-10-31,circuits:Db#21,False,False
+617,FULL_ONLY,races,Db,645,36946,round of races,number,number_z=1.4766,1999-10-31,circuits:Db#21,False,False
+618,FULL_ONLY,races,Db,645,36946,name of races,text,Japanese Grand Prix,1999-10-31,circuits:Db#21,False,False
+619,FULL_ONLY,races,Db,645,36946,date of races,datetime,1999-10-31,1999-10-31,circuits:Db#21,False,False
+620,FULL_ONLY,races,Db,645,36946,time of races,text,00:00:00,1999-10-31,circuits:Db#21,False,False
+621,FULL_ONLY,circuits,Db,21,21,circuitRef of circuits,text,suzuka,,,False,False
+622,FULL_ONLY,circuits,Db,21,21,name of circuits,text,Suzuka Circuit,,,False,False
+623,FULL_ONLY,circuits,Db,21,21,location of circuits,text,Suzuka,,,False,False
+624,FULL_ONLY,circuits,Db,21,21,country of circuits,text,Japan,,,False,False
+625,FULL_ONLY,circuits,Db,21,21,lat of circuits,number,number_z=0.061279,,,False,False
+626,FULL_ONLY,circuits,Db,21,21,lng of circuits,number,number_z=2.0625,,,False,False
+627,FULL_ONLY,circuits,Db,21,21,alt of circuits,number,number_z=-0.55469,,,False,False
+628,DRIVER_NBR_INDIRECT,driver-dnf,Train,4327,102635,date of driver-dnf,datetime,1997-10-10,1997-10-10,drivers:Db#20,False,False
+629,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,4327,102635,did_not_finish of driver-dnf,boolean,1,1997-10-10,drivers:Db#20,False,False
+630,DRIVER_NBR_INDIRECT,results,Db,16593,53995,number of results,number,number_z=-0.58203,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+631,DRIVER_NBR_INDIRECT,results,Db,16593,53995,grid of results,number,number_z=0.80469,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+632,DRIVER_NBR_INDIRECT,results,Db,16593,53995,positionOrder of results,number,number_z=1.0547,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+633,DRIVER_NBR_INDIRECT,results,Db,16593,53995,points of results,number,number_z=-0.45117,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+634,DRIVER_NBR_INDIRECT,results,Db,16593,53995,laps of results,number,number_z=-1.5156,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+635,DRIVER_NBR_INDIRECT,results,Db,16593,53995,statusId of results,number,number_z=0.09668,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+636,DRIVER_NBR_INDIRECT,results,Db,16593,53995,date of results,datetime,1999-09-12,1999-09-12,races:Db#642; drivers:Db#20; constructors:Db#21,False,False
+637,FULL_ONLY,races,Db,642,36943,year of races,number,number_z=0.34375,1999-09-12,circuits:Db#13,False,False
+638,FULL_ONLY,races,Db,642,36943,round of races,number,number_z=0.88672,1999-09-12,circuits:Db#13,False,False
+639,FULL_ONLY,races,Db,642,36943,name of races,text,Italian Grand Prix,1999-09-12,circuits:Db#13,False,False
+640,FULL_ONLY,races,Db,642,36943,date of races,datetime,1999-09-12,1999-09-12,circuits:Db#13,False,False
+641,FULL_ONLY,races,Db,642,36943,time of races,text,00:00:00,1999-09-12,circuits:Db#13,False,False
+642,DRIVER_NBR_INDIRECT,results,Db,16624,54026,number of results,number,number_z=-0.58203,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+643,DRIVER_NBR_INDIRECT,results,Db,16624,54026,grid of results,number,number_z=-0.71484,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+644,DRIVER_NBR_INDIRECT,results,Db,16624,54026,positionOrder of results,number,number_z=0.018921,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+645,DRIVER_NBR_INDIRECT,results,Db,16624,54026,points of results,number,number_z=-0.45117,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+646,DRIVER_NBR_INDIRECT,results,Db,16624,54026,laps of results,number,number_z=0.064941,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+647,DRIVER_NBR_INDIRECT,results,Db,16624,54026,statusId of results,number,number_z=0.09668,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+648,DRIVER_NBR_INDIRECT,results,Db,16624,54026,date of results,datetime,1999-09-26,1999-09-26,races:Db#643; drivers:Db#20; constructors:Db#21,False,False
+649,DRIVER_NBR_INDIRECT,standings,Db,24701,88183,points of standings,number,number_z=-0.37891,2001-03-18,races:Db#664; drivers:Db#20,False,False
+650,DRIVER_NBR_INDIRECT,standings,Db,24701,88183,position of standings,number,number_z=-0.11572,2001-03-18,races:Db#664; drivers:Db#20,False,False
+651,DRIVER_NBR_INDIRECT,standings,Db,24701,88183,wins of standings,number,number_z=-0.27148,2001-03-18,races:Db#664; drivers:Db#20,False,False
+652,DRIVER_NBR_INDIRECT,standings,Db,24701,88183,date of standings,datetime,2001-03-18,2001-03-18,races:Db#664; drivers:Db#20,False,False
+653,FULL_ONLY,races,Db,664,36965,year of races,number,number_z=0.44336,2001-03-18,circuits:Db#1,False,False
+654,FULL_ONLY,races,Db,664,36965,round of races,number,number_z=-1.2812,2001-03-18,circuits:Db#1,False,False
+655,FULL_ONLY,races,Db,664,36965,name of races,text,Malaysian Grand Prix,2001-03-18,circuits:Db#1,False,False
+656,FULL_ONLY,races,Db,664,36965,date of races,datetime,2001-03-18,2001-03-18,circuits:Db#1,False,False
+657,FULL_ONLY,races,Db,664,36965,time of races,text,00:00:00,2001-03-18,circuits:Db#1,False,False
+658,DRIVER_NBR_INDIRECT,results,Db,17282,54684,number of results,number,number_z=-0.71484,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+659,DRIVER_NBR_INDIRECT,results,Db,17282,54684,grid of results,number,number_z=1.0859,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+660,DRIVER_NBR_INDIRECT,results,Db,17282,54684,position of results,number,number_z=1.0469,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+661,DRIVER_NBR_INDIRECT,results,Db,17282,54684,positionOrder of results,number,number_z=0.018921,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+662,DRIVER_NBR_INDIRECT,results,Db,17282,54684,points of results,number,number_z=-0.45117,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+663,DRIVER_NBR_INDIRECT,results,Db,17282,54684,laps of results,number,number_z=0.40039,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+664,DRIVER_NBR_INDIRECT,results,Db,17282,54684,statusId of results,number,number_z=-0.20996,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+665,DRIVER_NBR_INDIRECT,results,Db,17282,54684,date of results,datetime,2001-07-15,2001-07-15,races:Db#673; drivers:Db#20; constructors:Db#21,False,False
+666,FULL_ONLY,races,Db,673,36974,year of races,number,number_z=0.44336,2001-07-15,circuits:Db#8,False,False
+667,FULL_ONLY,races,Db,673,36974,round of races,number,number_z=0.49414,2001-07-15,circuits:Db#8,False,False
+668,FULL_ONLY,races,Db,673,36974,name of races,text,British Grand Prix,2001-07-15,circuits:Db#8,False,False
+669,FULL_ONLY,races,Db,673,36974,date of races,datetime,2001-07-15,2001-07-15,circuits:Db#8,False,False
+670,FULL_ONLY,races,Db,673,36974,time of races,text,00:00:00,2001-07-15,circuits:Db#8,False,False
+671,DRIVER_NBR_INDIRECT,standings,Db,25929,89411,points of standings,number,number_z=-0.013794,2004-07-25,races:Db#724; drivers:Db#20,False,False
+672,DRIVER_NBR_INDIRECT,standings,Db,25929,89411,position of standings,number,number_z=-0.60547,2004-07-25,races:Db#724; drivers:Db#20,False,False
+673,DRIVER_NBR_INDIRECT,standings,Db,25929,89411,wins of standings,number,number_z=-0.27148,2004-07-25,races:Db#724; drivers:Db#20,False,False
+674,DRIVER_NBR_INDIRECT,standings,Db,25929,89411,date of standings,datetime,2004-07-25,2004-07-25,races:Db#724; drivers:Db#20,False,False
+675,FULL_ONLY,races,Db,724,37025,year of races,number,number_z=0.58984,2004-07-25,circuits:Db#9,False,False
+676,FULL_ONLY,races,Db,724,37025,round of races,number,number_z=0.69141,2004-07-25,circuits:Db#9,False,False
+677,FULL_ONLY,races,Db,724,37025,name of races,text,German Grand Prix,2004-07-25,circuits:Db#9,False,False
+678,FULL_ONLY,races,Db,724,37025,date of races,datetime,2004-07-25,2004-07-25,circuits:Db#9,False,False
+679,FULL_ONLY,races,Db,724,37025,time of races,text,00:00:00,2004-07-25,circuits:Db#9,False,False
+680,DRIVER_NBR_INDIRECT,standings,Db,24156,87638,points of standings,number,number_z=-0.013794,1999-08-01,races:Db#639; drivers:Db#20,False,False
+681,DRIVER_NBR_INDIRECT,standings,Db,24156,87638,position of standings,number,number_z=-0.78516,1999-08-01,races:Db#639; drivers:Db#20,False,False
+682,DRIVER_NBR_INDIRECT,standings,Db,24156,87638,wins of standings,number,number_z=-0.27148,1999-08-01,races:Db#639; drivers:Db#20,False,False
+683,DRIVER_NBR_INDIRECT,standings,Db,24156,87638,date of standings,datetime,1999-08-01,1999-08-01,races:Db#639; drivers:Db#20,False,False
+684,DRIVER_NBR_INDIRECT,standings,Db,25009,88491,points of standings,number,number_z=-0.1543,2001-09-30,races:Db#678; drivers:Db#20,False,False
+685,DRIVER_NBR_INDIRECT,standings,Db,25009,88491,position of standings,number,number_z=-0.54297,2001-09-30,races:Db#678; drivers:Db#20,False,False
+686,DRIVER_NBR_INDIRECT,standings,Db,25009,88491,wins of standings,number,number_z=-0.27148,2001-09-30,races:Db#678; drivers:Db#20,False,False
+687,DRIVER_NBR_INDIRECT,standings,Db,25009,88491,date of standings,datetime,2001-09-30,2001-09-30,races:Db#678; drivers:Db#20,False,False
+688,DRIVER_NBR_INDIRECT,standings,Db,23229,86711,points of standings,number,number_z=-0.37891,1996-09-22,races:Db#595; drivers:Db#20,False,False
+689,DRIVER_NBR_INDIRECT,standings,Db,23229,86711,position of standings,number,number_z=-0.054688,1996-09-22,races:Db#595; drivers:Db#20,False,False
+690,DRIVER_NBR_INDIRECT,standings,Db,23229,86711,wins of standings,number,number_z=-0.27148,1996-09-22,races:Db#595; drivers:Db#20,False,False
+691,DRIVER_NBR_INDIRECT,standings,Db,23229,86711,date of standings,datetime,1996-09-22,1996-09-22,races:Db#595; drivers:Db#20,False,False
+692,FULL_ONLY,races,Db,595,36896,year of races,number,number_z=0.19629,1996-09-22,circuits:Db#26,False,False
+693,FULL_ONLY,races,Db,595,36896,round of races,number,number_z=1.2812,1996-09-22,circuits:Db#26,False,False
+694,FULL_ONLY,races,Db,595,36896,name of races,text,Portuguese Grand Prix,1996-09-22,circuits:Db#26,False,False
+695,FULL_ONLY,races,Db,595,36896,date of races,datetime,1996-09-22,1996-09-22,circuits:Db#26,False,False
+696,FULL_ONLY,races,Db,595,36896,time of races,text,00:00:00,1996-09-22,circuits:Db#26,False,False
+697,FULL_ONLY,circuits,Db,26,26,circuitRef of circuits,text,estoril,,,False,False
+698,FULL_ONLY,circuits,Db,26,26,name of circuits,text,Autódromo do Estoril,,,False,False
+699,FULL_ONLY,circuits,Db,26,26,location of circuits,text,Estoril,,,False,False
+700,FULL_ONLY,circuits,Db,26,26,country of circuits,text,Portugal,,,False,False
+701,FULL_ONLY,circuits,Db,26,26,lat of circuits,number,number_z=0.23242,,,False,False
+702,FULL_ONLY,circuits,Db,26,26,lng of circuits,number,number_z=-0.16016,,,False,False
+703,FULL_ONLY,circuits,Db,26,26,alt of circuits,number,number_z=-0.32422,,,False,False
+704,DRIVER_NBR_INDIRECT,driver-dnf,Train,7202,105510,date of driver-dnf,datetime,2003-02-11,2003-02-11,drivers:Db#20,False,False
+705,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,7202,105510,did_not_finish of driver-dnf,boolean,1,2003-02-11,drivers:Db#20,False,False
+706,DRIVER_NBR_INDIRECT,standings,Db,24901,88383,points of standings,number,number_z=-0.35156,2001-07-15,races:Db#673; drivers:Db#20,False,False
+707,DRIVER_NBR_INDIRECT,standings,Db,24901,88383,position of standings,number,number_z=-0.17676,2001-07-15,races:Db#673; drivers:Db#20,False,False
+708,DRIVER_NBR_INDIRECT,standings,Db,24901,88383,wins of standings,number,number_z=-0.27148,2001-07-15,races:Db#673; drivers:Db#20,False,False
+709,DRIVER_NBR_INDIRECT,standings,Db,24901,88383,date of standings,datetime,2001-07-15,2001-07-15,races:Db#673; drivers:Db#20,False,False
+710,DRIVER_NBR_INDIRECT,driver-dnf,Train,7221,105529,date of driver-dnf,datetime,2001-03-23,2001-03-23,drivers:Db#20,False,False
+711,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,7221,105529,did_not_finish of driver-dnf,boolean,1,2001-03-23,drivers:Db#20,False,False
+712,DRIVER_NBR_INDIRECT,results,Db,15727,53129,number of results,number,number_z=-0.38672,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+713,DRIVER_NBR_INDIRECT,results,Db,15727,53129,grid of results,number,number_z=-0.4375,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+714,DRIVER_NBR_INDIRECT,results,Db,15727,53129,position of results,number,number_z=0.21484,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+715,DRIVER_NBR_INDIRECT,results,Db,15727,53129,positionOrder of results,number,number_z=-0.5,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+716,DRIVER_NBR_INDIRECT,results,Db,15727,53129,points of results,number,number_z=-0.45117,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+717,DRIVER_NBR_INDIRECT,results,Db,15727,53129,laps of results,number,number_z=0.60156,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+718,DRIVER_NBR_INDIRECT,results,Db,15727,53129,milliseconds of results,number,number_z=-0.42969,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+719,DRIVER_NBR_INDIRECT,results,Db,15727,53129,statusId of results,number,number_z=-0.62891,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+720,DRIVER_NBR_INDIRECT,results,Db,15727,53129,date of results,datetime,1997-05-25,1997-05-25,races:Db#602; drivers:Db#20; constructors:Db#16,False,False
+721,FULL_ONLY,races,Db,602,36903,year of races,number,number_z=0.24512,1997-05-25,circuits:Db#3,False,False
+722,FULL_ONLY,races,Db,602,36903,round of races,number,number_z=-0.49023,1997-05-25,circuits:Db#3,False,False
+723,FULL_ONLY,races,Db,602,36903,name of races,text,Spanish Grand Prix,1997-05-25,circuits:Db#3,False,False
+724,FULL_ONLY,races,Db,602,36903,date of races,datetime,1997-05-25,1997-05-25,circuits:Db#3,False,False
+725,FULL_ONLY,races,Db,602,36903,time of races,text,00:00:00,1997-05-25,circuits:Db#3,False,False
+726,DRIVER_NBR_INDIRECT,standings,Db,25035,88517,points of standings,number,number_z=-0.1543,2001-10-14,races:Db#679; drivers:Db#20,False,False
+727,DRIVER_NBR_INDIRECT,standings,Db,25035,88517,position of standings,number,number_z=-0.54297,2001-10-14,races:Db#679; drivers:Db#20,False,False
+728,DRIVER_NBR_INDIRECT,standings,Db,25035,88517,wins of standings,number,number_z=-0.27148,2001-10-14,races:Db#679; drivers:Db#20,False,False
+729,DRIVER_NBR_INDIRECT,standings,Db,25035,88517,date of standings,datetime,2001-10-14,2001-10-14,races:Db#679; drivers:Db#20,False,False
+730,FULL_ONLY,races,Db,679,36980,year of races,number,number_z=0.44336,2001-10-14,circuits:Db#21,False,False
+731,FULL_ONLY,races,Db,679,36980,round of races,number,number_z=1.6719,2001-10-14,circuits:Db#21,False,False
+732,FULL_ONLY,races,Db,679,36980,name of races,text,Japanese Grand Prix,2001-10-14,circuits:Db#21,False,False
+733,FULL_ONLY,races,Db,679,36980,date of races,datetime,2001-10-14,2001-10-14,circuits:Db#21,False,False
+734,FULL_ONLY,races,Db,679,36980,time of races,text,00:00:00,2001-10-14,circuits:Db#21,False,False
+735,DRIVER_NBR_INDIRECT,results,Db,17769,55171,number of results,number,number_z=-0.58203,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+736,DRIVER_NBR_INDIRECT,results,Db,17769,55171,grid of results,number,number_z=-0.4375,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+737,DRIVER_NBR_INDIRECT,results,Db,17769,55171,positionOrder of results,number,number_z=0.018921,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+738,DRIVER_NBR_INDIRECT,results,Db,17769,55171,points of results,number,number_z=-0.45117,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+739,DRIVER_NBR_INDIRECT,results,Db,17769,55171,laps of results,number,number_z=-0.30469,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+740,DRIVER_NBR_INDIRECT,results,Db,17769,55171,statusId of results,number,number_z=-0.47656,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+741,DRIVER_NBR_INDIRECT,results,Db,17769,55171,date of results,datetime,2002-10-13,2002-10-13,races:Db#696; drivers:Db#20; constructors:Db#16,False,False
+742,FULL_ONLY,races,Db,696,36997,year of races,number,number_z=0.49219,2002-10-13,circuits:Db#21,False,False
+743,FULL_ONLY,races,Db,696,36997,round of races,number,number_z=1.6719,2002-10-13,circuits:Db#21,False,False
+744,FULL_ONLY,races,Db,696,36997,name of races,text,Japanese Grand Prix,2002-10-13,circuits:Db#21,False,False
+745,FULL_ONLY,races,Db,696,36997,date of races,datetime,2002-10-13,2002-10-13,circuits:Db#21,False,False
+746,FULL_ONLY,races,Db,696,36997,time of races,text,00:00:00,2002-10-13,circuits:Db#21,False,False
+747,DRIVER_NBR_INDIRECT,standings,Db,24736,88218,points of standings,number,number_z=-0.35156,2001-04-15,races:Db#666; drivers:Db#20,False,False
+748,DRIVER_NBR_INDIRECT,standings,Db,24736,88218,position of standings,number,number_z=-0.60547,2001-04-15,races:Db#666; drivers:Db#20,False,False
+749,DRIVER_NBR_INDIRECT,standings,Db,24736,88218,wins of standings,number,number_z=-0.27148,2001-04-15,races:Db#666; drivers:Db#20,False,False
+750,DRIVER_NBR_INDIRECT,standings,Db,24736,88218,date of standings,datetime,2001-04-15,2001-04-15,races:Db#666; drivers:Db#20,False,False
+751,FULL_ONLY,races,Db,666,36967,year of races,number,number_z=0.44336,2001-04-15,circuits:Db#20,False,False
+752,FULL_ONLY,races,Db,666,36967,round of races,number,number_z=-0.88281,2001-04-15,circuits:Db#20,False,False
+753,FULL_ONLY,races,Db,666,36967,name of races,text,San Marino Grand Prix,2001-04-15,circuits:Db#20,False,False
+754,FULL_ONLY,races,Db,666,36967,date of races,datetime,2001-04-15,2001-04-15,circuits:Db#20,False,False
+755,FULL_ONLY,races,Db,666,36967,time of races,text,00:00:00,2001-04-15,circuits:Db#20,False,False
+756,DRIVER_NBR_INDIRECT,results,Db,15860,53262,number of results,number,number_z=-0.38672,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+757,DRIVER_NBR_INDIRECT,results,Db,15860,53262,grid of results,number,number_z=-0.99219,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+758,DRIVER_NBR_INDIRECT,results,Db,15860,53262,position of results,number,number_z=-1.2422,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+759,DRIVER_NBR_INDIRECT,results,Db,15860,53262,positionOrder of results,number,number_z=-1.4062,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+760,DRIVER_NBR_INDIRECT,results,Db,15860,53262,points of results,number,number_z=0.96875,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+761,DRIVER_NBR_INDIRECT,results,Db,15860,53262,laps of results,number,number_z=-0.069824,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+762,DRIVER_NBR_INDIRECT,results,Db,15860,53262,milliseconds of results,number,number_z=-0.33984,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+763,DRIVER_NBR_INDIRECT,results,Db,15860,53262,statusId of results,number,number_z=-0.62891,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+764,DRIVER_NBR_INDIRECT,results,Db,15860,53262,date of results,datetime,1997-08-24,1997-08-24,races:Db#608; drivers:Db#20; constructors:Db#16,False,False
+765,FULL_ONLY,races,Db,608,36909,year of races,number,number_z=0.24512,1997-08-24,circuits:Db#12,False,False
+766,FULL_ONLY,races,Db,608,36909,round of races,number,number_z=0.69141,1997-08-24,circuits:Db#12,False,False
+767,FULL_ONLY,races,Db,608,36909,name of races,text,Belgian Grand Prix,1997-08-24,circuits:Db#12,False,False
+768,FULL_ONLY,races,Db,608,36909,date of races,datetime,1997-08-24,1997-08-24,circuits:Db#12,False,False
+769,FULL_ONLY,races,Db,608,36909,time of races,text,00:00:00,1997-08-24,circuits:Db#12,False,False
+770,DRIVER_NBR_INDIRECT,standings,Db,25894,89376,points of standings,number,number_z=-0.098145,2004-07-04,races:Db#722; drivers:Db#20,False,False
+771,DRIVER_NBR_INDIRECT,standings,Db,25894,89376,position of standings,number,number_z=-0.60547,2004-07-04,races:Db#722; drivers:Db#20,False,False
+772,DRIVER_NBR_INDIRECT,standings,Db,25894,89376,wins of standings,number,number_z=-0.27148,2004-07-04,races:Db#722; drivers:Db#20,False,False
+773,DRIVER_NBR_INDIRECT,standings,Db,25894,89376,date of standings,datetime,2004-07-04,2004-07-04,races:Db#722; drivers:Db#20,False,False
+774,FULL_ONLY,races,Db,722,37023,year of races,number,number_z=0.58984,2004-07-04,circuits:Db#7,False,False
+775,FULL_ONLY,races,Db,722,37023,round of races,number,number_z=0.29688,2004-07-04,circuits:Db#7,False,False
+776,FULL_ONLY,races,Db,722,37023,name of races,text,French Grand Prix,2004-07-04,circuits:Db#7,False,False
+777,FULL_ONLY,races,Db,722,37023,date of races,datetime,2004-07-04,2004-07-04,circuits:Db#7,False,False
+778,FULL_ONLY,races,Db,722,37023,time of races,text,00:00:00,2004-07-04,circuits:Db#7,False,False
+779,DRIVER_NBR_INDIRECT,standings,Db,23788,87270,points of standings,number,number_z=-0.013794,1998-06-28,races:Db#621; drivers:Db#20,False,False
+780,DRIVER_NBR_INDIRECT,standings,Db,23788,87270,position of standings,number,number_z=-0.84766,1998-06-28,races:Db#621; drivers:Db#20,False,False
+781,DRIVER_NBR_INDIRECT,standings,Db,23788,87270,wins of standings,number,number_z=-0.27148,1998-06-28,races:Db#621; drivers:Db#20,False,False
+782,DRIVER_NBR_INDIRECT,standings,Db,23788,87270,date of standings,datetime,1998-06-28,1998-06-28,races:Db#621; drivers:Db#20,False,False
+783,FULL_ONLY,races,Db,621,36922,year of races,number,number_z=0.29492,1998-06-28,circuits:Db#7,False,False
+784,FULL_ONLY,races,Db,621,36922,round of races,number,number_z=-0.097168,1998-06-28,circuits:Db#7,False,False
+785,FULL_ONLY,races,Db,621,36922,name of races,text,French Grand Prix,1998-06-28,circuits:Db#7,False,False
+786,FULL_ONLY,races,Db,621,36922,date of races,datetime,1998-06-28,1998-06-28,circuits:Db#7,False,False
+787,FULL_ONLY,races,Db,621,36922,time of races,text,00:00:00,1998-06-28,circuits:Db#7,False,False
+788,DRIVER_NBR_INDIRECT,results,Db,15651,53053,number of results,number,number_z=-0.38672,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+789,DRIVER_NBR_INDIRECT,results,Db,15651,53053,grid of results,number,number_z=-0.29883,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+790,DRIVER_NBR_INDIRECT,results,Db,15651,53053,positionOrder of results,number,number_z=0.53906,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+791,DRIVER_NBR_INDIRECT,results,Db,15651,53053,points of results,number,number_z=-0.45117,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+792,DRIVER_NBR_INDIRECT,results,Db,15651,53053,laps of results,number,number_z=-0.74219,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+793,DRIVER_NBR_INDIRECT,results,Db,15651,53053,statusId of results,number,number_z=-0.51562,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+794,DRIVER_NBR_INDIRECT,results,Db,15651,53053,date of results,datetime,1997-04-13,1997-04-13,races:Db#599; drivers:Db#20; constructors:Db#16,False,False
+795,FULL_ONLY,races,Db,599,36900,year of races,number,number_z=0.24512,1997-04-13,circuits:Db#24,False,False
+796,FULL_ONLY,races,Db,599,36900,round of races,number,number_z=-1.0781,1997-04-13,circuits:Db#24,False,False
+797,FULL_ONLY,races,Db,599,36900,name of races,text,Argentine Grand Prix,1997-04-13,circuits:Db#24,False,False
+798,FULL_ONLY,races,Db,599,36900,date of races,datetime,1997-04-13,1997-04-13,circuits:Db#24,False,False
+799,FULL_ONLY,races,Db,599,36900,time of races,text,00:00:00,1997-04-13,circuits:Db#24,False,False
+800,DRIVER_NBR_INDIRECT,qualifying,Db,1685,28171,number of qualifying,number,number_z=-0.39844,2003-05-31,races:Db#703; drivers:Db#20; constructors:Db#16,False,False
+801,DRIVER_NBR_INDIRECT,qualifying,Db,1685,28171,position of qualifying,number,number_z=0.12012,2003-05-31,races:Db#703; drivers:Db#20; constructors:Db#16,False,False
+802,DRIVER_NBR_INDIRECT,qualifying,Db,1685,28171,date of qualifying,datetime,2003-05-31,2003-05-31,races:Db#703; drivers:Db#20; constructors:Db#16,False,False
+803,FULL_ONLY,races,Db,703,37004,year of races,number,number_z=0.53906,2003-06-01,circuits:Db#5,False,False
+804,FULL_ONLY,races,Db,703,37004,round of races,number,number_z=-0.29492,2003-06-01,circuits:Db#5,False,False
+805,FULL_ONLY,races,Db,703,37004,name of races,text,Monaco Grand Prix,2003-06-01,circuits:Db#5,False,False
+806,FULL_ONLY,races,Db,703,37004,date of races,datetime,2003-06-01,2003-06-01,circuits:Db#5,False,False
+807,FULL_ONLY,races,Db,703,37004,time of races,text,00:00:00,2003-06-01,circuits:Db#5,False,False
+808,DRIVER_NBR_INDIRECT,standings,Db,25153,88635,points of standings,number,number_z=-0.32227,2002-05-12,races:Db#685; drivers:Db#20,False,False
+809,DRIVER_NBR_INDIRECT,standings,Db,25153,88635,position of standings,number,number_z=-0.48242,2002-05-12,races:Db#685; drivers:Db#20,False,False
+810,DRIVER_NBR_INDIRECT,standings,Db,25153,88635,wins of standings,number,number_z=-0.27148,2002-05-12,races:Db#685; drivers:Db#20,False,False
+811,DRIVER_NBR_INDIRECT,standings,Db,25153,88635,date of standings,datetime,2002-05-12,2002-05-12,races:Db#685; drivers:Db#20,False,False
+812,FULL_ONLY,races,Db,685,36986,year of races,number,number_z=0.49219,2002-05-12,circuits:Db#69,False,False
+813,FULL_ONLY,races,Db,685,36986,round of races,number,number_z=-0.49023,2002-05-12,circuits:Db#69,False,False
+814,FULL_ONLY,races,Db,685,36986,name of races,text,Austrian Grand Prix,2002-05-12,circuits:Db#69,False,False
+815,FULL_ONLY,races,Db,685,36986,date of races,datetime,2002-05-12,2002-05-12,circuits:Db#69,False,False
+816,FULL_ONLY,races,Db,685,36986,time of races,text,00:00:00,2002-05-12,circuits:Db#69,False,False
+817,DRIVER_NBR_INDIRECT,driver-dnf,Train,6505,104813,date of driver-dnf,datetime,2000-02-27,2000-02-27,drivers:Db#20,False,False
+818,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,6505,104813,did_not_finish of driver-dnf,boolean,0,2000-02-27,drivers:Db#20,False,False
+819,DRIVER_NBR_INDIRECT,driver-dnf,Train,9265,107573,date of driver-dnf,datetime,2004-06-05,2004-06-05,drivers:Db#20,False,False
+820,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,9265,107573,did_not_finish of driver-dnf,boolean,1,2004-06-05,drivers:Db#20,False,False
+821,DRIVER_NBR_INDIRECT,qualifying,Db,1145,27631,number of qualifying,number,number_z=-0.3418,1997-07-12,races:Db#605; drivers:Db#20; constructors:Db#16,False,False
+822,DRIVER_NBR_INDIRECT,qualifying,Db,1145,27631,position of qualifying,number,number_z=-0.19824,1997-07-12,races:Db#605; drivers:Db#20; constructors:Db#16,False,False
+823,DRIVER_NBR_INDIRECT,qualifying,Db,1145,27631,date of qualifying,datetime,1997-07-12,1997-07-12,races:Db#605; drivers:Db#20; constructors:Db#16,False,False
+824,FULL_ONLY,races,Db,605,36906,year of races,number,number_z=0.24512,1997-07-13,circuits:Db#8,False,False
+825,FULL_ONLY,races,Db,605,36906,round of races,number,number_z=0.099609,1997-07-13,circuits:Db#8,False,False
+826,FULL_ONLY,races,Db,605,36906,name of races,text,British Grand Prix,1997-07-13,circuits:Db#8,False,False
+827,FULL_ONLY,races,Db,605,36906,date of races,datetime,1997-07-13,1997-07-13,circuits:Db#8,False,False
+828,FULL_ONLY,races,Db,605,36906,time of races,text,00:00:00,1997-07-13,circuits:Db#8,False,False
+829,DRIVER_NBR_INDIRECT,driver-dnf,Train,10038,108346,date of driver-dnf,datetime,1997-08-11,1997-08-11,drivers:Db#20,False,False
+830,COL+DRIVER_NBR_INDIRECT,driver-dnf,Train,10038,108346,did_not_finish of driver-dnf,boolean,0,1997-08-11,drivers:Db#20,False,False
+831,DRIVER_NBR_INDIRECT,results,Db,15752,53154,number of results,number,number_z=-0.38672,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+832,DRIVER_NBR_INDIRECT,results,Db,15752,53154,grid of results,number,number_z=-0.71484,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+833,DRIVER_NBR_INDIRECT,results,Db,15752,53154,position of results,number,number_z=-1.0312,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+834,DRIVER_NBR_INDIRECT,results,Db,15752,53154,positionOrder of results,number,number_z=-1.2812,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+835,DRIVER_NBR_INDIRECT,results,Db,15752,53154,points of results,number,number_z=0.49609,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+836,DRIVER_NBR_INDIRECT,results,Db,15752,53154,laps of results,number,number_z=0.26562,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+837,DRIVER_NBR_INDIRECT,results,Db,15752,53154,milliseconds of results,number,number_z=-0.93359,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+838,DRIVER_NBR_INDIRECT,results,Db,15752,53154,statusId of results,number,number_z=-0.62891,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+839,DRIVER_NBR_INDIRECT,results,Db,15752,53154,date of results,datetime,1997-06-15,1997-06-15,races:Db#603; drivers:Db#20; constructors:Db#16,False,False
+840,FULL_ONLY,races,Db,603,36904,year of races,number,number_z=0.24512,1997-06-15,circuits:Db#6,False,False
+841,FULL_ONLY,races,Db,603,36904,round of races,number,number_z=-0.29492,1997-06-15,circuits:Db#6,False,False
+842,FULL_ONLY,races,Db,603,36904,name of races,text,Canadian Grand Prix,1997-06-15,circuits:Db#6,False,False
+843,FULL_ONLY,races,Db,603,36904,date of races,datetime,1997-06-15,1997-06-15,circuits:Db#6,False,False
+844,FULL_ONLY,races,Db,603,36904,time of races,text,00:00:00,1997-06-15,circuits:Db#6,False,False
+845,FULL_ONLY,circuits,Db,6,6,circuitRef of circuits,text,villeneuve,,,False,False
+846,FULL_ONLY,circuits,Db,6,6,name of circuits,text,Circuit Gilles Villeneuve,,,False,False
+847,FULL_ONLY,circuits,Db,6,6,location of circuits,text,Montreal,,,False,False
+848,FULL_ONLY,circuits,Db,6,6,country of circuits,text,Canada,,,False,False
+849,FULL_ONLY,circuits,Db,6,6,lat of circuits,number,number_z=0.52734,,,False,False
+850,FULL_ONLY,circuits,Db,6,6,lng of circuits,number,number_z=-1.1406,,,False,False
+851,FULL_ONLY,circuits,Db,6,6,alt of circuits,number,number_z=-0.64453,,,False,False
+852,DRIVER_NBR_INDIRECT,standings,Db,23077,86559,points of standings,number,number_z=-0.37891,1996-06-30,races:Db#589; drivers:Db#20,False,False
+853,DRIVER_NBR_INDIRECT,standings,Db,23077,86559,position of standings,number,number_z=-0.17676,1996-06-30,races:Db#589; drivers:Db#20,False,False
+854,DRIVER_NBR_INDIRECT,standings,Db,23077,86559,wins of standings,number,number_z=-0.27148,1996-06-30,races:Db#589; drivers:Db#20,False,False
+855,DRIVER_NBR_INDIRECT,standings,Db,23077,86559,date of standings,datetime,1996-06-30,1996-06-30,races:Db#589; drivers:Db#20,False,False
+856,FULL_ONLY,races,Db,589,36890,year of races,number,number_z=0.19629,1996-06-30,circuits:Db#7,False,False
+857,FULL_ONLY,races,Db,589,36890,round of races,number,number_z=0.099609,1996-06-30,circuits:Db#7,False,False
+858,FULL_ONLY,races,Db,589,36890,name of races,text,French Grand Prix,1996-06-30,circuits:Db#7,False,False
+859,FULL_ONLY,races,Db,589,36890,date of races,datetime,1996-06-30,1996-06-30,circuits:Db#7,False,False
+860,FULL_ONLY,races,Db,589,36890,time of races,text,00:00:00,1996-06-30,circuits:Db#7,False,False
+861,DRIVER_NBR_INDIRECT,qualifying,Db,1407,27893,number of qualifying,number,number_z=-0.39844,2000-03-11,races:Db#646; drivers:Db#20; constructors:Db#21,False,False
+862,DRIVER_NBR_INDIRECT,qualifying,Db,1407,27893,position of qualifying,number,number_z=-0.35742,2000-03-11,races:Db#646; drivers:Db#20; constructors:Db#21,False,False
+863,DRIVER_NBR_INDIRECT,qualifying,Db,1407,27893,date of qualifying,datetime,2000-03-11,2000-03-11,races:Db#646; drivers:Db#20; constructors:Db#21,False,False
+864,FULL_ONLY,races,Db,646,36947,year of races,number,number_z=0.39258,2000-03-12,circuits:Db#0,False,False
+865,FULL_ONLY,races,Db,646,36947,round of races,number,number_z=-1.4766,2000-03-12,circuits:Db#0,False,False
+866,FULL_ONLY,races,Db,646,36947,name of races,text,Australian Grand Prix,2000-03-12,circuits:Db#0,False,False
+867,FULL_ONLY,races,Db,646,36947,date of races,datetime,2000-03-12,2000-03-12,circuits:Db#0,False,False
+868,FULL_ONLY,races,Db,646,36947,time of races,text,00:00:00,2000-03-12,circuits:Db#0,False,False
+869,DRIVER_NBR_INDIRECT,standings,Db,24716,88198,points of standings,number,number_z=-0.35156,2001-04-01,races:Db#665; drivers:Db#20,False,False
+870,DRIVER_NBR_INDIRECT,standings,Db,24716,88198,position of standings,number,number_z=-0.66406,2001-04-01,races:Db#665; drivers:Db#20,False,False
+871,DRIVER_NBR_INDIRECT,standings,Db,24716,88198,wins of standings,number,number_z=-0.27148,2001-04-01,races:Db#665; drivers:Db#20,False,False
+872,DRIVER_NBR_INDIRECT,standings,Db,24716,88198,date of standings,datetime,2001-04-01,2001-04-01,races:Db#665; drivers:Db#20,False,False
+873,FULL_ONLY,races,Db,665,36966,year of races,number,number_z=0.44336,2001-04-01,circuits:Db#17,False,False
+874,FULL_ONLY,races,Db,665,36966,round of races,number,number_z=-1.0781,2001-04-01,circuits:Db#17,False,False
+875,FULL_ONLY,races,Db,665,36966,name of races,text,Brazilian Grand Prix,2001-04-01,circuits:Db#17,False,False
+876,FULL_ONLY,races,Db,665,36966,date of races,datetime,2001-04-01,2001-04-01,circuits:Db#17,False,False
+877,FULL_ONLY,races,Db,665,36966,time of races,text,00:00:00,2001-04-01,circuits:Db#17,False,False
+878,DRIVER_NBR_INDIRECT,standings,Db,23341,86823,points of standings,number,number_z=-0.26562,1997-05-11,races:Db#601; drivers:Db#20,False,False
+879,DRIVER_NBR_INDIRECT,standings,Db,23341,86823,position of standings,number,number_z=-0.54297,1997-05-11,races:Db#601; drivers:Db#20,False,False
+880,DRIVER_NBR_INDIRECT,standings,Db,23341,86823,wins of standings,number,number_z=-0.27148,1997-05-11,races:Db#601; drivers:Db#20,False,False
+881,DRIVER_NBR_INDIRECT,standings,Db,23341,86823,date of standings,datetime,1997-05-11,1997-05-11,races:Db#601; drivers:Db#20,False,False
+882,FULL_ONLY,races,Db,601,36902,year of races,number,number_z=0.24512,1997-05-11,circuits:Db#5,False,False
+883,FULL_ONLY,races,Db,601,36902,round of races,number,number_z=-0.6875,1997-05-11,circuits:Db#5,False,False
+884,FULL_ONLY,races,Db,601,36902,name of races,text,Monaco Grand Prix,1997-05-11,circuits:Db#5,False,False
+885,FULL_ONLY,races,Db,601,36902,date of races,datetime,1997-05-11,1997-05-11,circuits:Db#5,False,False
+886,FULL_ONLY,races,Db,601,36902,time of races,text,00:00:00,1997-05-11,circuits:Db#5,False,False
+887,DRIVER_NBR_INDIRECT,qualifying,Db,921,27407,number of qualifying,number,number_z=0.16113,1996-05-18,races:Db#586; drivers:Db#20; constructors:Db#17,False,False
+888,DRIVER_NBR_INDIRECT,qualifying,Db,921,27407,position of qualifying,number,number_z=1.0703,1996-05-18,races:Db#586; drivers:Db#20; constructors:Db#17,False,False
+889,DRIVER_NBR_INDIRECT,qualifying,Db,921,27407,date of qualifying,datetime,1996-05-18,1996-05-18,races:Db#586; drivers:Db#20; constructors:Db#17,False,False
+890,FULL_ONLY,races,Db,586,36887,year of races,number,number_z=0.19629,1996-05-19,circuits:Db#5,False,False
+891,FULL_ONLY,races,Db,586,36887,round of races,number,number_z=-0.49023,1996-05-19,circuits:Db#5,False,False
+892,FULL_ONLY,races,Db,586,36887,name of races,text,Monaco Grand Prix,1996-05-19,circuits:Db#5,False,False
+893,FULL_ONLY,races,Db,586,36887,date of races,datetime,1996-05-19,1996-05-19,circuits:Db#5,False,False
+894,FULL_ONLY,races,Db,586,36887,time of races,text,00:00:00,1996-05-19,circuits:Db#5,False,False
+895,DRIVER_NBR_INDIRECT,qualifying,Db,1343,27829,number of qualifying,number,number_z=-0.51172,1999-03-06,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+896,DRIVER_NBR_INDIRECT,qualifying,Db,1343,27829,position of qualifying,number,number_z=-0.67578,1999-03-06,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+897,DRIVER_NBR_INDIRECT,qualifying,Db,1343,27829,date of qualifying,datetime,1999-03-06,1999-03-06,races:Db#630; drivers:Db#20; constructors:Db#21,False,False
+898,DRIVER_NBR_INDIRECT,results,Db,17145,54547,number of results,number,number_z=-0.71484,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+899,DRIVER_NBR_INDIRECT,results,Db,17145,54547,grid of results,number,number_z=1.0859,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+900,DRIVER_NBR_INDIRECT,results,Db,17145,54547,position of results,number,number_z=1.25,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+901,DRIVER_NBR_INDIRECT,results,Db,17145,54547,positionOrder of results,number,number_z=0.14844,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+902,DRIVER_NBR_INDIRECT,results,Db,17145,54547,points of results,number,number_z=-0.45117,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+903,DRIVER_NBR_INDIRECT,results,Db,17145,54547,laps of results,number,number_z=0.57031,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+904,DRIVER_NBR_INDIRECT,results,Db,17145,54547,statusId of results,number,number_z=-0.20996,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+905,DRIVER_NBR_INDIRECT,results,Db,17145,54547,date of results,datetime,2001-04-29,2001-04-29,races:Db#667; drivers:Db#20; constructors:Db#21,False,False
+906,FULL_ONLY,races,Db,667,36968,year of races,number,number_z=0.44336,2001-04-29,circuits:Db#3,False,False
+907,FULL_ONLY,races,Db,667,36968,round of races,number,number_z=-0.6875,2001-04-29,circuits:Db#3,False,False
+908,FULL_ONLY,races,Db,667,36968,name of races,text,Spanish Grand Prix,2001-04-29,circuits:Db#3,False,False
+909,FULL_ONLY,races,Db,667,36968,date of races,datetime,2001-04-29,2001-04-29,circuits:Db#3,False,False
+910,FULL_ONLY,races,Db,667,36968,time of races,text,00:00:00,2001-04-29,circuits:Db#3,False,False
+911,DRIVER_NBR_INDIRECT,standings,Db,24136,87618,points of standings,number,number_z=-0.013794,1999-07-25,races:Db#638; drivers:Db#20,False,False
+912,DRIVER_NBR_INDIRECT,standings,Db,24136,87618,position of standings,number,number_z=-0.78516,1999-07-25,races:Db#638; drivers:Db#20,False,False
+913,DRIVER_NBR_INDIRECT,standings,Db,24136,87618,wins of standings,number,number_z=-0.27148,1999-07-25,races:Db#638; drivers:Db#20,False,False
+914,DRIVER_NBR_INDIRECT,standings,Db,24136,87618,date of standings,datetime,1999-07-25,1999-07-25,races:Db#638; drivers:Db#20,False,False
+915,FULL_ONLY,races,Db,638,36939,year of races,number,number_z=0.34375,1999-07-25,circuits:Db#69,False,False
+916,FULL_ONLY,races,Db,638,36939,round of races,number,number_z=0.099609,1999-07-25,circuits:Db#69,False,False
+917,FULL_ONLY,races,Db,638,36939,name of races,text,Austrian Grand Prix,1999-07-25,circuits:Db#69,False,False
+918,FULL_ONLY,races,Db,638,36939,date of races,datetime,1999-07-25,1999-07-25,circuits:Db#69,False,False
+919,FULL_ONLY,races,Db,638,36939,time of races,text,00:00:00,1999-07-25,circuits:Db#69,False,False
+920,DRIVER_NBR_INDIRECT,standings,Db,25663,89145,points of standings,number,number_z=-0.098145,2003-09-14,races:Db#710; drivers:Db#20,False,False
+921,DRIVER_NBR_INDIRECT,standings,Db,25663,89145,position of standings,number,number_z=-0.54297,2003-09-14,races:Db#710; drivers:Db#20,False,False
+922,DRIVER_NBR_INDIRECT,standings,Db,25663,89145,wins of standings,number,number_z=0.73438,2003-09-14,races:Db#710; drivers:Db#20,False,False
+923,DRIVER_NBR_INDIRECT,standings,Db,25663,89145,date of standings,datetime,2003-09-14,2003-09-14,races:Db#710; drivers:Db#20,False,False
+924,FULL_ONLY,races,Db,710,37011,year of races,number,number_z=0.53906,2003-09-14,circuits:Db#13,False,False
+925,FULL_ONLY,races,Db,710,37011,round of races,number,number_z=1.0859,2003-09-14,circuits:Db#13,False,False
+926,FULL_ONLY,races,Db,710,37011,name of races,text,Italian Grand Prix,2003-09-14,circuits:Db#13,False,False
+927,FULL_ONLY,races,Db,710,37011,date of races,datetime,2003-09-14,2003-09-14,circuits:Db#13,False,False
+928,FULL_ONLY,races,Db,710,37011,time of races,text,00:00:00,2003-09-14,circuits:Db#13,False,False
+929,DRIVER_NBR_INDIRECT,qualifying,Db,1977,28463,number of qualifying,number,number_z=-0.39844,2004-05-22,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+930,DRIVER_NBR_INDIRECT,qualifying,Db,1977,28463,position of qualifying,number,number_z=-0.038818,2004-05-22,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+931,DRIVER_NBR_INDIRECT,qualifying,Db,1977,28463,date of qualifying,datetime,2004-05-22,2004-05-22,races:Db#718; drivers:Db#20; constructors:Db#14,False,False
+932,DRIVER_NBR_INDIRECT,standings,Db,25574,89056,points of standings,number,number_z=-0.098145,2003-07-06,races:Db#706; drivers:Db#20,False,False
+933,DRIVER_NBR_INDIRECT,standings,Db,25574,89056,position of standings,number,number_z=-0.60547,2003-07-06,races:Db#706; drivers:Db#20,False,False
+934,DRIVER_NBR_INDIRECT,standings,Db,25574,89056,wins of standings,number,number_z=0.73438,2003-07-06,races:Db#706; drivers:Db#20,False,False
+935,DRIVER_NBR_INDIRECT,standings,Db,25574,89056,date of standings,datetime,2003-07-06,2003-07-06,races:Db#706; drivers:Db#20,False,False
+936,DRIVER_NBR_INDIRECT,results,Db,16038,53440,number of results,number,number_z=-0.84766,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+937,DRIVER_NBR_INDIRECT,results,Db,16038,53440,grid of results,number,number_z=-0.16113,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+938,DRIVER_NBR_INDIRECT,results,Db,16038,53440,position of results,number,number_z=-0.2002,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+939,DRIVER_NBR_INDIRECT,results,Db,16038,53440,positionOrder of results,number,number_z=-0.76172,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+940,DRIVER_NBR_INDIRECT,results,Db,16038,53440,points of results,number,number_z=-0.45117,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+941,DRIVER_NBR_INDIRECT,results,Db,16038,53440,laps of results,number,number_z=0.87109,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+942,DRIVER_NBR_INDIRECT,results,Db,16038,53440,milliseconds of results,number,number_z=0.23047,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+943,DRIVER_NBR_INDIRECT,results,Db,16038,53440,statusId of results,number,number_z=-0.62891,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+944,DRIVER_NBR_INDIRECT,results,Db,16038,53440,date of results,datetime,1998-04-12,1998-04-12,races:Db#616; drivers:Db#20; constructors:Db#21,False,False
+945,DRIVER_NBR_INDIRECT,standings,Db,24295,87777,points of standings,number,number_z=-0.013794,1999-10-31,races:Db#645; drivers:Db#20,False,False
+946,DRIVER_NBR_INDIRECT,standings,Db,24295,87777,position of standings,number,number_z=-0.66406,1999-10-31,races:Db#645; drivers:Db#20,False,False
+947,DRIVER_NBR_INDIRECT,standings,Db,24295,87777,wins of standings,number,number_z=-0.27148,1999-10-31,races:Db#645; drivers:Db#20,False,False
+948,DRIVER_NBR_INDIRECT,standings,Db,24295,87777,date of standings,datetime,1999-10-31,1999-10-31,races:Db#645; drivers:Db#20,False,False
+949,DRIVER_NBR_INDIRECT,results,Db,16997,54399,number of results,number,number_z=-0.45117,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+950,DRIVER_NBR_INDIRECT,results,Db,16997,54399,grid of results,number,number_z=0.53125,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+951,DRIVER_NBR_INDIRECT,results,Db,16997,54399,positionOrder of results,number,number_z=0.53906,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+952,DRIVER_NBR_INDIRECT,results,Db,16997,54399,points of results,number,number_z=-0.45117,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+953,DRIVER_NBR_INDIRECT,results,Db,16997,54399,laps of results,number,number_z=-0.069824,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+954,DRIVER_NBR_INDIRECT,results,Db,16997,54399,statusId of results,number,number_z=-0.47656,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+955,DRIVER_NBR_INDIRECT,results,Db,16997,54399,date of results,datetime,2000-09-24,2000-09-24,races:Db#660; drivers:Db#20; constructors:Db#21,False,False
+956,DRIVER_NBR_INDIRECT,standings,Db,24334,87816,points of standings,number,number_z=-0.1543,2000-03-26,races:Db#647; drivers:Db#20,False,False
+957,DRIVER_NBR_INDIRECT,standings,Db,24334,87816,position of standings,number,number_z=-1.0938,2000-03-26,races:Db#647; drivers:Db#20,False,False
+958,DRIVER_NBR_INDIRECT,standings,Db,24334,87816,wins of standings,number,number_z=-0.27148,2000-03-26,races:Db#647; drivers:Db#20,False,False
+959,DRIVER_NBR_INDIRECT,standings,Db,24334,87816,date of standings,datetime,2000-03-26,2000-03-26,races:Db#647; drivers:Db#20,False,False
+960,FULL_ONLY,races,Db,647,36948,year of races,number,number_z=0.39258,2000-03-26,circuits:Db#17,False,False
+961,FULL_ONLY,races,Db,647,36948,round of races,number,number_z=-1.2812,2000-03-26,circuits:Db#17,False,False
+962,FULL_ONLY,races,Db,647,36948,name of races,text,Brazilian Grand Prix,2000-03-26,circuits:Db#17,False,False
+963,FULL_ONLY,races,Db,647,36948,date of races,datetime,2000-03-26,2000-03-26,circuits:Db#17,False,False
+964,FULL_ONLY,races,Db,647,36948,time of races,text,00:00:00,2000-03-26,circuits:Db#17,False,False
+965,DRIVER_NBR_INDIRECT,results,Db,15813,53215,number of results,number,number_z=-0.38672,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+966,DRIVER_NBR_INDIRECT,results,Db,15813,53215,grid of results,number,number_z=-1.2656,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+967,DRIVER_NBR_INDIRECT,results,Db,15813,53215,position of results,number,number_z=0.62891,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+968,DRIVER_NBR_INDIRECT,results,Db,15813,53215,positionOrder of results,number,number_z=-0.24121,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+969,DRIVER_NBR_INDIRECT,results,Db,15813,53215,points of results,number,number_z=-0.45117,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+970,DRIVER_NBR_INDIRECT,results,Db,15813,53215,laps of results,number,number_z=-0.2041,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+971,DRIVER_NBR_INDIRECT,results,Db,15813,53215,statusId of results,number,number_z=-0.094727,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+972,DRIVER_NBR_INDIRECT,results,Db,15813,53215,date of results,datetime,1997-07-27,1997-07-27,races:Db#606; drivers:Db#20; constructors:Db#16,False,False
+973,FULL_ONLY,races,Db,606,36907,year of races,number,number_z=0.24512,1997-07-27,circuits:Db#9,False,False
+974,FULL_ONLY,races,Db,606,36907,round of races,number,number_z=0.29688,1997-07-27,circuits:Db#9,False,False
+975,FULL_ONLY,races,Db,606,36907,name of races,text,German Grand Prix,1997-07-27,circuits:Db#9,False,False
+976,FULL_ONLY,races,Db,606,36907,date of races,datetime,1997-07-27,1997-07-27,circuits:Db#9,False,False
+977,FULL_ONLY,races,Db,606,36907,time of races,text,00:00:00,1997-07-27,circuits:Db#9,False,False
+978,DRIVER_NBR_INDIRECT,results,Db,17408,54810,number of results,number,number_z=-0.71484,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+979,DRIVER_NBR_INDIRECT,results,Db,17408,54810,grid of results,number,number_z=-0.71484,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+980,DRIVER_NBR_INDIRECT,results,Db,17408,54810,position of results,number,number_z=1.875,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+981,DRIVER_NBR_INDIRECT,results,Db,17408,54810,positionOrder of results,number,number_z=0.53906,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+982,DRIVER_NBR_INDIRECT,results,Db,17408,54810,points of results,number,number_z=-0.45117,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+983,DRIVER_NBR_INDIRECT,results,Db,17408,54810,laps of results,number,number_z=0.031006,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+984,DRIVER_NBR_INDIRECT,results,Db,17408,54810,statusId of results,number,number_z=-0.43945,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+985,DRIVER_NBR_INDIRECT,results,Db,17408,54810,date of results,datetime,2001-10-14,2001-10-14,races:Db#679; drivers:Db#20; constructors:Db#21,False,False
+986,DRIVER_NBR_INDIRECT,standings,Db,24355,87837,points of standings,number,number_z=-0.1543,2000-04-09,races:Db#648; drivers:Db#20,False,False
+987,DRIVER_NBR_INDIRECT,standings,Db,24355,87837,position of standings,number,number_z=-1.0312,2000-04-09,races:Db#648; drivers:Db#20,False,False
+988,DRIVER_NBR_INDIRECT,standings,Db,24355,87837,wins of standings,number,number_z=-0.27148,2000-04-09,races:Db#648; drivers:Db#20,False,False
+989,DRIVER_NBR_INDIRECT,standings,Db,24355,87837,date of standings,datetime,2000-04-09,2000-04-09,races:Db#648; drivers:Db#20,False,False
+990,FULL_ONLY,races,Db,648,36949,year of races,number,number_z=0.39258,2000-04-09,circuits:Db#20,False,False
+991,FULL_ONLY,races,Db,648,36949,round of races,number,number_z=-1.0781,2000-04-09,circuits:Db#20,False,False
+992,FULL_ONLY,races,Db,648,36949,name of races,text,San Marino Grand Prix,2000-04-09,circuits:Db#20,False,False
+993,FULL_ONLY,races,Db,648,36949,date of races,datetime,2000-04-09,2000-04-09,circuits:Db#20,False,False
+994,FULL_ONLY,races,Db,648,36949,time of races,text,00:00:00,2000-04-09,circuits:Db#20,False,False
+995,DRIVER_NBR_INDIRECT,standings,Db,22967,86449,points of standings,number,number_z=-0.37891,1996-04-28,races:Db#584; drivers:Db#20,False,False
+996,DRIVER_NBR_INDIRECT,standings,Db,22967,86449,position of standings,number,number_z=0.12793,1996-04-28,races:Db#584; drivers:Db#20,False,False
+997,DRIVER_NBR_INDIRECT,standings,Db,22967,86449,wins of standings,number,number_z=-0.27148,1996-04-28,races:Db#584; drivers:Db#20,False,False
+998,DRIVER_NBR_INDIRECT,standings,Db,22967,86449,date of standings,datetime,1996-04-28,1996-04-28,races:Db#584; drivers:Db#20,False,False
+999,FULL_ONLY,races,Db,584,36885,year of races,number,number_z=0.19629,1996-04-28,circuits:Db#19,False,False
+1000,FULL_ONLY,races,Db,584,36885,round of races,number,number_z=-0.88281,1996-04-28,circuits:Db#19,False,False
+1001,FULL_ONLY,races,Db,584,36885,name of races,text,European Grand Prix,1996-04-28,circuits:Db#19,False,False
+1002,FULL_ONLY,races,Db,584,36885,date of races,datetime,1996-04-28,1996-04-28,circuits:Db#19,False,False
+1003,FULL_ONLY,races,Db,584,36885,time of races,text,00:00:00,1996-04-28,circuits:Db#19,False,False
+1004,DRIVER_NBR_INDIRECT,results,Db,17637,55039,number of results,number,number_z=-0.58203,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1005,DRIVER_NBR_INDIRECT,results,Db,17637,55039,grid of results,number,number_z=0.80469,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1006,DRIVER_NBR_INDIRECT,results,Db,17637,55039,position of results,number,number_z=-0.2002,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1007,DRIVER_NBR_INDIRECT,results,Db,17637,55039,positionOrder of results,number,number_z=-0.76172,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1008,DRIVER_NBR_INDIRECT,results,Db,17637,55039,points of results,number,number_z=-0.45117,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1009,DRIVER_NBR_INDIRECT,results,Db,17637,55039,laps of results,number,number_z=0.43555,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1010,DRIVER_NBR_INDIRECT,results,Db,17637,55039,statusId of results,number,number_z=-0.24805,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1011,DRIVER_NBR_INDIRECT,results,Db,17637,55039,date of results,datetime,2002-07-07,2002-07-07,races:Db#689; drivers:Db#20; constructors:Db#16,False,False
+1012,FULL_ONLY,races,Db,689,36990,year of races,number,number_z=0.49219,2002-07-07,circuits:Db#8,False,False
+1013,FULL_ONLY,races,Db,689,36990,round of races,number,number_z=0.29688,2002-07-07,circuits:Db#8,False,False
+1014,FULL_ONLY,races,Db,689,36990,name of races,text,British Grand Prix,2002-07-07,circuits:Db#8,False,False
+1015,FULL_ONLY,races,Db,689,36990,date of races,datetime,2002-07-07,2002-07-07,circuits:Db#8,False,False
+1016,FULL_ONLY,races,Db,689,36990,time of races,text,00:00:00,2002-07-07,circuits:Db#8,False,False
+1017,DRIVER_NBR_INDIRECT,standings,Db,25621,89103,points of standings,number,number_z=-0.098145,2003-08-03,races:Db#708; drivers:Db#20,False,False
+1018,DRIVER_NBR_INDIRECT,standings,Db,25621,89103,position of standings,number,number_z=-0.54297,2003-08-03,races:Db#708; drivers:Db#20,False,False
+1019,DRIVER_NBR_INDIRECT,standings,Db,25621,89103,wins of standings,number,number_z=0.73438,2003-08-03,races:Db#708; drivers:Db#20,False,False
+1020,DRIVER_NBR_INDIRECT,standings,Db,25621,89103,date of standings,datetime,2003-08-03,2003-08-03,races:Db#708; drivers:Db#20,False,False
+1021,FULL_ONLY,races,Db,708,37009,year of races,number,number_z=0.53906,2003-08-03,circuits:Db#9,False,False
+1022,FULL_ONLY,races,Db,708,37009,round of races,number,number_z=0.69141,2003-08-03,circuits:Db#9,False,False
+1023,FULL_ONLY,races,Db,708,37009,name of races,text,German Grand Prix,2003-08-03,circuits:Db#9,False,False
