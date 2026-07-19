@@ -55,6 +55,9 @@ class RelationalDataset(Dataset):
         embedding_model,
         d_text,
         seed,
+        self_label_dropout=0.0,
+        local_k=0,
+        periphery_cell_cap=0,
     ):
         dataset_tuples = []
         target_column_indices = []
@@ -105,6 +108,9 @@ class RelationalDataset(Dataset):
             seed=seed,
             target_columns=target_column_indices,
             columns_to_drop=drop_column_indices,
+            self_label_dropout=self_label_dropout,
+            local_k=local_k,
+            periphery_cell_cap=periphery_cell_cap,
         )
 
         self.seq_len = seq_len

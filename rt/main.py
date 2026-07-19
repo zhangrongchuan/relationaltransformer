@@ -94,6 +94,15 @@ def main(
     d_model,
     num_heads,
     d_ff,
+    time_rope=False,
+    entity_flag=False,
+    # sampler variants: applied to the TRAIN sampler only (eval stays standard)
+    self_label_dropout=0.0,
+    local_k=0,
+    periphery_cell_cap=0,
+    # applied to eval samplers (sampling changes affect eval contexts too)
+    eval_local_k=0,
+    eval_periphery_cell_cap=0,
 ):
     seed_everything(seed)
 
@@ -133,6 +142,9 @@ def main(
         embedding_model=embedding_model,
         d_text=d_text,
         seed=seed,
+        self_label_dropout=self_label_dropout,
+        local_k=local_k,
+        periphery_cell_cap=periphery_cell_cap,
     )
     loader = DataLoader(
         dataset,
@@ -156,6 +168,8 @@ def main(
                 embedding_model=embedding_model,
                 d_text=d_text,
                 seed=0,
+                local_k=eval_local_k,
+                periphery_cell_cap=eval_periphery_cell_cap,
             )
             eval_dataset.sampler.shuffle_py(0)
             eval_loaders[(db_name, table_name, split)] = DataLoader(
@@ -173,11 +187,18 @@ def main(
         d_text=d_text,
         num_heads=num_heads,
         d_ff=d_ff,
+        time_rope=time_rope,
+        entity_flag=entity_flag,
     )
     if load_ckpt_path is not None:
         load_ckpt_path = Path(load_ckpt_path).expanduser()
         state_dict = torch.load(load_ckpt_path, map_location="cpu")
-        net.load_state_dict(state_dict)
+        # variant params (e.g. same_entity_emb, zero-init) may be absent from
+        # baseline checkpoints; missing keys keep their init in that case
+        missing, unexpected = net.load_state_dict(state_dict, strict=False)
+        assert not unexpected, f"unexpected keys in ckpt: {unexpected}"
+        allowed_missing = {"same_entity_emb"}
+        assert set(missing) <= allowed_missing, f"missing keys: {missing}"
 
     if rank == 0:
         param_count = sum(p.numel() for p in net.parameters())

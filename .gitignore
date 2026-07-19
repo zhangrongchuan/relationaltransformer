@@ -5,3 +5,7 @@ __pycache__
 /wandb
 .vscode
 /ckpts
+/paper
+/experiments/results
+/experiments/results-step1-exp1&exp2 early test
+/analysis_output

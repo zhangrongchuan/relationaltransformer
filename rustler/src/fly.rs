@@ -242,12 +242,27 @@ pub struct Sampler {
     seed: u64,
     target_columns: Vec<i32>,
     columns_to_drop: Vec<Vec<i32>>,
+    // probability of dropping a same-entity target-column cell (a "self
+    // label") from the context; anti-shortcut regularizer during training,
+    // or the no-self-label eval protocol when set to 1.0
+    self_label_dropout: f64,
+    // if > 0: guarantee the `local_k` most recent events (per entity the
+    // seed row references) enter the context before random BFS expansion
+    local_k: usize,
+    // if > 0: rows unrelated to the seed entity (periphery) contribute at
+    // most this many cells, freeing budget for entity-related content
+    periphery_cell_cap: usize,
 }
 
 #[pymethods]
 impl Sampler {
     #[new]
     #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (
+        dataset_tuples, batch_size, seq_len, rank, world_size, max_bfs_width,
+        embedding_model, d_text, seed, target_columns, columns_to_drop,
+        self_label_dropout = 0.0, local_k = 0, periphery_cell_cap = 0
+    ))]
     fn new(
         dataset_tuples: Vec<(String, i32, i32)>,
         batch_size: usize,
@@ -260,6 +275,9 @@ impl Sampler {
         seed: u64,
         target_columns: Vec<i32>,
         columns_to_drop: Vec<Vec<i32>>,
+        self_label_dropout: f64,
+        local_k: usize,
+        periphery_cell_cap: usize,
     ) -> Self {
         let mut datasets = Vec::new();
         let mut items = Vec::new();
@@ -319,6 +337,9 @@ impl Sampler {
             seed,
             target_columns,
             columns_to_drop,
+            self_label_dropout,
+            local_k,
+            periphery_cell_cap,
         }
     }
 
@@ -382,10 +403,53 @@ impl Sampler {
                 .wrapping_add(seed_node_idx as u64)
                 .wrapping_add(self.seed),
         );
+
+        // local phase (local/global sampling): guarantee the most recent
+        // db events of each entity the seed row references, before the
+        // random BFS spends the budget elsewhere
+        let mut local_ftr: Vec<(usize, i32)> = Vec::new();
+        if self.local_k > 0 {
+            for edge in seed_node.f2p_edges.iter() {
+                let ent_idx: i32 = edge.node_idx.into();
+                let mut evs: Vec<(i32, i32)> = Vec::new(); // (ts, node_idx)
+                for e in get_p2f_edges(dataset, ent_idx).iter() {
+                    if e.table_type != ArchivedTableType::Db {
+                        continue;
+                    }
+                    let (Some(ets), Some(sts)) =
+                        (e.timestamp.as_ref(), seed_node.timestamp.as_ref())
+                    else {
+                        continue;
+                    };
+                    let ets: i32 = (*ets).into();
+                    let sts: i32 = (*sts).into();
+                    if ets > sts {
+                        continue;
+                    }
+                    evs.push((ets, e.node_idx.into()));
+                }
+                if evs.len() > self.local_k {
+                    // partial selection: O(E) instead of full sort
+                    evs.select_nth_unstable_by_key(self.local_k - 1, |(ts, _)| {
+                        std::cmp::Reverse(*ts)
+                    });
+                    evs.truncate(self.local_k);
+                }
+                evs.sort_unstable_by_key(|(ts, _)| std::cmp::Reverse(*ts));
+                for (_, nidx) in evs.into_iter() {
+                    local_ftr.push((2, nidx));
+                }
+            }
+            // process most recent last so LIFO pop yields most recent first
+            local_ftr.reverse();
+        }
+
         loop {
             // select node
             let (depth, node_idx) = if !f2p_ftr.is_empty() {
                 f2p_ftr.pop().unwrap()
+            } else if !local_ftr.is_empty() {
+                local_ftr.pop().unwrap()
             } else {
                 let mut depth_choices = Vec::new();
                 for (i, node) in p2f_ftr.iter().enumerate() {
@@ -460,13 +524,46 @@ impl Sampler {
                 p2f_ftr[depth + 1].push(db_p2f_ftr[*idx]);
             }
 
+            // is this row a same-entity row of the task table? (its target-col
+            // cell would be a "self label" the model can shortcut-copy)
+            let shares_seed_entity = node.node_idx != seed_node_idx
+                && node.f2p_nbr_idxs.iter().any(|a| {
+                    let a: i32 = (*a).into();
+                    seed_node.f2p_nbr_idxs.iter().any(|b| {
+                        let b: i32 = (*b).into();
+                        a == b
+                    })
+                });
+
+            let is_seed_entity_row = seed_node.f2p_nbr_idxs.iter().any(|b| {
+                let b: i32 = (*b).into();
+                let n: i32 = node.node_idx.into();
+                b == n
+            });
+            let is_periphery = self.periphery_cell_cap > 0
+                && !shares_seed_entity
+                && !is_seed_entity_row
+                && node.node_idx != seed_node_idx
+                && !node.is_task_node;
+
+            let mut cells_written = 0usize;
             let num_cells = node.col_name_idxs.len();
             for cell_i in 0..num_cells {
+                if is_periphery && cells_written >= self.periphery_cell_cap {
+                    break;
+                }
                 let col_idx: i32 = node.col_name_idxs[cell_i].into();
                 if (node.node_idx == seed_node_idx && columns_to_drop.contains(&col_idx))
                     || (node.timestamp == seed_node.timestamp && columns_to_drop.contains(&col_idx))
                 {
                     continue; // do not add this cell to the sequence
+                }
+                if self.self_label_dropout > 0.0
+                    && col_idx == target_column
+                    && shares_seed_entity
+                    && rng.random::<f64>() < self.self_label_dropout
+                {
+                    continue; // drop self-label cell (anti-shortcut)
                 }
                 slices.node_idxs[seq_i] = node.node_idx.into();
 
@@ -513,6 +610,7 @@ impl Sampler {
                 };
 
                 seq_i += 1;
+                cells_written += 1;
                 if seq_i >= self.seq_len {
                     break;
                 }
@@ -570,6 +668,9 @@ pub fn main(cli: Cli) {
         0,                          // seed
         vec![-1; 1],                // target_columns
         vec![Vec::<i32>::new()],    // columns_to_drop
+        0.0,                        // self_label_dropout
+        0,                          // local_k
+        0,                          // periphery_cell_cap
     );
     println!("Sampler loaded in {:?}", tic.elapsed());
 
