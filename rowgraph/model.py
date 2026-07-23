@@ -76,11 +76,13 @@ class RowGraphNet(nn.Module):
         use_label_edges=True,
         pool="meanmax",
         use_relgraph=False,
+        local_readout=False,  # global expectation E[y|x]; local hurt 7/8 tasks (ablation)
     ):
         super().__init__()
         self.use_time = use_time
         self.use_label_edges = use_label_edges
         self.pool = pool
+        self.local_readout = local_readout
         if pool == "attn":
             # learned-query attention over cells within a row: wide rows keep
             # their salient fields instead of diluting them into the mean
@@ -160,7 +162,11 @@ class RowGraphNet(nn.Module):
         return x * valid[..., None]
 
     # ------------------------------------------------------------------
-    def forward(self, batch):
+    def forward(self, batch, reg_cb=None):
+        """reg_cb: optional per-graph regression codebook (g_centers, g_len).
+        g_centers (G, Kmax) float, rows sorted, tail repeat-padded with the
+        last valid center; g_len (G,) long. Rows for clf graphs are unused
+        (any valid sorted row). None -> the fixed normal-quantile bins."""
         node = batch["node_idxs"].long()
         is_pad = batch["is_padding"]
         is_tgt = batch["is_targets"]
@@ -302,18 +308,27 @@ class RowGraphNet(nn.Module):
         # ---------------- candidate value nodes ----------------
         g_sem = target_sem[graphs]
         is_clf = g_sem == SEM_BOOLEAN
-        n_cand = torch.where(is_clf, 2, self.n_bins)
+        # per-graph regression codebook (adaptive) or the fixed default bins
+        if reg_cb is None:
+            g_centers = self.bin_centers.float().to(dev).repeat(G, 1)
+            g_len = torch.full((G,), self.n_bins, device=dev, dtype=torch.long)
+        else:
+            g_centers, g_len = reg_cb
+            g_centers = g_centers.to(dev).float().contiguous()
+            g_len = g_len.to(dev).long().clamp(min=2)
+        Kmax = g_centers.shape[1]
+        n_cand = torch.where(is_clf, torch.full_like(g_len, 2), g_len)
         cand_off = torch.cumsum(
             torch.cat([torch.zeros(1, device=dev, dtype=torch.long), n_cand[:-1]]), 0
         )
         C = int(n_cand.sum())
         cand_g = torch.repeat_interleave(torch.arange(G, device=dev), n_cand)
-        # candidate values: [0,1] for clf; bin centers for reg
+        # candidate values: [0,1] for clf; codebook centers for reg
         idx_in_g = torch.arange(C, device=dev) - cand_off[cand_g]
         cand_val = torch.where(
             is_clf[cand_g],
             idx_in_g.float(),
-            self.bin_centers.float()[idx_in_g.clamp(max=self.n_bins - 1)],
+            g_centers[cand_g, idx_in_g.clamp(max=Kmax - 1)],
         )
         # intrinsic identity: encode the candidate VALUE with the value encoder
         h_c_bool = self.norm_dict["boolean"](self.enc_dict["boolean"](cand_val[:, None]))
@@ -340,12 +355,18 @@ class RowGraphNet(nn.Module):
                 clf_l = is_clf[g_l]
                 # clf: edge to candidate 0/1
                 dst_clf = cand_off[g_l] + (v_bool > 0).long()
-                # reg: two-hot edges to the two nearest bins
-                z = v_num.clamp(self.bin_centers[0].item(), self.bin_centers[-1].item())
-                ri = torch.searchsorted(self.bin_centers.float(), z).clamp(
-                     1, self.n_bins - 1)
+                # reg: two-hot edges to the two nearest codebook centers,
+                # per-label boundaries (each label uses its graph's codebook)
+                cbr = g_centers[g_l].contiguous()                 # (L, Kmax)
+                cbn = g_len[g_l]                                  # (L,)
+                lo = cbr[:, 0]
+                hi = cbr.gather(1, (cbn - 1)[:, None]).squeeze(1)
+                z = torch.minimum(torch.maximum(v_num, lo), hi)
+                ri = torch.searchsorted(cbr, z[:, None]).squeeze(1).clamp(min=1)
+                ri = torch.minimum(ri, cbn - 1)
                 li = ri - 1
-                lc, rc = self.bin_centers.float()[li], self.bin_centers.float()[ri]
+                lc = cbr.gather(1, li[:, None]).squeeze(1)
+                rc = cbr.gather(1, ri[:, None]).squeeze(1)
                 wr = ((z - lc) / (rc - lc).clamp(min=1e-6)).clamp(0, 1)
                 dst_l = cand_off[g_l] + li
                 dst_r = cand_off[g_l] + ri
@@ -395,21 +416,51 @@ class RowGraphNet(nn.Module):
             out["clf_graphs"] = graphs[gi]
         if (~is_clf).any():
             gi = (~is_clf).nonzero(as_tuple=True)[0]
-            sc = scores[
-                cand_off[gi][:, None] + torch.arange(self.n_bins, device=dev)[None]
-            ]  # (Greg, n_bins)
-            z = y_num[gi].clamp(
-                self.bin_centers[0].item(), self.bin_centers[-1].item()
-            )
-            ri = torch.searchsorted(self.bin_centers.float(), z).clamp(1, self.n_bins - 1)
+            cbr = g_centers[gi].contiguous()                     # (Greg, Kmax)
+            cbn = g_len[gi]                                      # (Greg,)
+            ar = torch.arange(Kmax, device=dev)
+            validm = ar[None] < cbn[:, None]                     # (Greg, Kmax)
+            idx = (cand_off[gi][:, None] + ar[None]).clamp(max=C - 1)
+            sc = scores[idx]                                     # (Greg, Kmax)
+            sc = torch.where(validm, sc, torch.full_like(sc, float("-inf")))
+            lo = cbr[:, 0]
+            hi = cbr.gather(1, (cbn - 1)[:, None]).squeeze(1)
+            z = torch.minimum(torch.maximum(y_num[gi], lo), hi)
+            ri = torch.searchsorted(cbr, z[:, None]).squeeze(1).clamp(min=1)
+            ri = torch.minimum(ri, cbn - 1)
             li = ri - 1
-            lc, rc = self.bin_centers.float()[li], self.bin_centers.float()[ri]
+            lc = cbr.gather(1, li[:, None]).squeeze(1)
+            rc = cbr.gather(1, ri[:, None]).squeeze(1)
             wr = ((z - lc) / (rc - lc).clamp(min=1e-6)).clamp(0, 1)
             twohot = torch.zeros_like(sc)
             twohot.scatter_(1, li[:, None], (1 - wr)[:, None])
             twohot.scatter_add_(1, ri[:, None], wr[:, None])
-            loss = loss + -(twohot * F.log_softmax(sc, dim=-1)).sum()
-            out["reg_pred"] = (F.softmax(sc, dim=-1) * self.bin_centers.float()).sum(-1)
+            logp = F.log_softmax(sc, dim=-1)
+            logp = torch.where(validm, logp, torch.zeros_like(logp))  # 0*-inf -> NaN guard
+            loss = loss + -(twohot * logp).sum()
+            probs = F.softmax(sc, dim=-1)                        # -inf cols -> 0
+            centers_safe = torch.where(validm, cbr, torch.zeros_like(cbr))
+            if self.local_readout:
+                # Expectation over the argmax bin and its two neighbours only.
+                # The two-hot target puts all mass on two adjacent centers, so
+                # this reads out exactly the quantity training optimises; the
+                # global mean instead lets far-away centers drag the estimate
+                # (fatal when the codebook spans a long tail).  When the model
+                # is confident the two agree, so this only changes the
+                # under-trained / diffuse case.
+                star = probs.argmax(-1, keepdim=True)
+                off = torch.arange(-1, 2, device=dev)
+                win = (star + off).clamp(0, Kmax - 1)             # (Greg,3)
+                win = torch.minimum(win, (cbn - 1)[:, None])
+                pw = probs.gather(1, win)
+                cw = centers_safe.gather(1, win)
+                # a clamped window can repeat an index; keep each center once
+                uniq = torch.ones_like(pw, dtype=torch.bool)
+                uniq[:, 1:] = win[:, 1:] != win[:, :-1]
+                pw = pw * uniq
+                out["reg_pred"] = (pw * cw).sum(-1) / pw.sum(-1).clamp(min=1e-9)
+            else:
+                out["reg_pred"] = (probs * centers_safe).sum(-1)
             out["reg_y"] = y_num[gi]
             out["reg_graphs"] = graphs[gi]
 
