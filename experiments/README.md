@@ -1,5 +1,11 @@
 # Experiments 目录索引
 
+> **代码布局(2026-07 整理)**:可复用的模型代码在顶层 **`rowgraph/`** 包
+> (`model.py` 网络、`train.py` 训练入口、`gen_codebooks.py` + `codebooks_k64.json`
+> 回归码本)。本目录下只放实验/分析脚本;`exp2_rowgraph/rowgraph_*.py` 等旧路径
+> 均为指向 `rowgraph/` 的软链接,仅为兼容历史命令与运行中的作业保留。
+> 标准用法:`pixi run python rowgraph/train.py <db> <table> <variant> [seed] [steps] [seq_len] [d_model]`
+
 ## exp1_rt_components/ — 实验一：RT 诊断与组件改进（已完成）
 
 **问题**：RT 的 zero-shot 是否主要靠抄标签？采样浪费有多严重？

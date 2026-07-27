@@ -10,9 +10,10 @@ import glob
 import json
 from pathlib import Path
 
-RES = Path(__file__).resolve().parents[1] / "results"
+RES = Path(__file__).resolve().parents[1] / "results"        # experiments/results
+PROD = Path(__file__).resolve().parents[2] / "results"       # <repo>/results (rowgraph 正式版)
 ARCH = RES.parent / "results-step1-exp1&exp2 early test"  # 第一阶段归档
-DIRS = [RES, RES / "res_classification", ARCH, ARCH / "res_classification"]
+DIRS = [PROD, RES, RES / "res_classification", ARCH, ARCH / "res_classification"]
 
 
 def gl(pattern):

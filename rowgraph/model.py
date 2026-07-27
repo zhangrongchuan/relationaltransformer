@@ -339,7 +339,7 @@ class RowGraphNet(nn.Module):
         l_src = torch.empty(0, device=dev, dtype=torch.long)
         l_dst = torch.empty(0, device=dev, dtype=torch.long)
         l_w = torch.empty(0, device=dev, dtype=h_row.dtype)
-        if self.use_label_edges:
+        if self.use_label_edges:#把历史task的target row的cell和当前task的candidate node连起来
             lab = (
                 valid
                 & (batch["col_name_idxs"] == target_col[:, None])
@@ -383,14 +383,14 @@ class RowGraphNet(nn.Module):
         # ---------------- message passing over [rows ; candidates] --------
         h = torch.cat([h_row, h_cand], dim=0)
         edges = {
-            "f2p": (e_src, e_dst, ones, fk_cond),
+            "f2p": (e_src, e_dst, ones, fk_cond), #src 边的起点 id，消息从这里出发, dst 边的终点 id，消息汇聚到这里, w/ones每条边的权重, fk_cond每条边的附加条件向量(relgraph)
             "p2f": (e_dst, e_src, ones, fk_cond),
-            "label": (l_src, R + l_dst, l_w),  # one-directional into candidates
+            "label": (l_src, R + l_dst, l_w),  # one-directional into candidates l_src历史行id l_w每条边的权重
         }
         for layer in self.layers:
             h = layer(h, edges)
 
-        # ---------------- readout ----------------
+        # ---------------- readout打分 ----------------
         h_seed = h[seed_row]  # (G,d)
         scores = self.readout(
             torch.cat([h_seed[cand_g], h[R:]], dim=-1)

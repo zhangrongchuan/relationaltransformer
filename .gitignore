@@ -6,6 +6,6 @@ __pycache__
 .vscode
 /ckpts
 /paper
-/experiments/results
-/experiments/results-step1-exp1&exp2 early test
-/analysis_output
+/experiments
+/results
+experiment.ipynb
