@@ -1,0 +1,78 @@
+\documentclass{article}
+
+% Anonymous NeurIPS 2026 Main Track submission (default).
+\usepackage{neurips_2026}
+% Camera-ready: \usepackage[main,final]{neurips_2026}
+% Preprint:     \usepackage[preprint]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amssymb}
+
+% Project-wide mathematical notation.
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\vcat}{\mathbin{\Vert}}
+\newcommand{\Indic}{\mathbb{I}}
+\newcommand{\graphmain}{\mathrm{main}}
+\newcommand{\graphrel}{\mathrm{rel}}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\rmsnorm}{\operatorname{RMSNorm}}
+\newcommand{\layernorm}{\operatorname{LayerNorm}}
+\newcommand{\rgsrc}{\operatorname{src}}
+\newcommand{\rgdst}{\operatorname{dst}}
+\newcommand{\tblname}{\operatorname{table}}
+
+\title{Relation-Conditioned Row-Graph Learning for Relational Prediction}
+
+% Fill in author information before producing a final or preprint version.
+% The default submission mode above automatically hides this block.
+\author{%
+  Author Name \\
+  Department or Laboratory \\
+  Institution \\
+  \texttt{author@example.com}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  \input{sections/abstract}
+\end{abstract}
+
+\input{sections/methodology}
+
+% Add the remaining paper sections as they are completed, e.g.:
+% \input{sections/introduction}
+% \input{sections/related_work}
+% \input{sections/experiments}
+% \input{sections/conclusion}
+
+% Add only for the camera-ready version. The environment is hidden in the
+% anonymous submission mode.
+% \begin{ack}
+%   Acknowledgments, funding disclosure, and competing interests.
+% \end{ack}
+
+% Enable these lines once the manuscript contains citations.
+% \bibliographystyle{plainnat}
+% \bibliography{references}
+
+% The Methodology is intentionally written in full in the main paper.
+% Add non-duplicative technical appendices here once experiments are fixed.
+% \appendix
+% \input{sections/technical_appendix}
+
+\newpage
+\input{checklist}
+
+\end{document}

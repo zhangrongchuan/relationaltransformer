@@ -1,0 +1,1223 @@
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Problem Formulation and Architecture Overview}
+\label{sec:method:problem-overview}
+
+We consider binary prediction over a relational database. At row level, the
+complete database is represented by the directed multigraph
+\begin{equation}
+  \mathcal G^{\mathrm{DB}}
+  =
+  \bigl(\mathcal V^{\mathrm{DB}},\mathcal E^{\mathrm{FK}}\bigr),
+\label{eq:method:database-graph}
+\end{equation}
+where \(\mathcal V^{\mathrm{DB}}\) is the set of database rows and
+\(\mathcal E^{\mathrm{FK}}\) is an edge-index set induced by foreign-key
+(FK) and primary-key references. Every \(e\in\mathcal E^{\mathrm{FK}}\) is
+directed from a child row \(\rgsrc(e)\) to the referenced parent row
+\(\rgdst(e)\). We treat edges as indexed objects rather than endpoint pairs,
+so parallel FK links between the same two rows remain distinct.
+
+Let \(\mathfrak T\) denote the collection of binary prediction tasks. A
+query instance \(g\) belongs to task \(\kappa(g)\in\mathfrak T\) and is
+specified by a seed row \(r_g^\star\in\mathcal V^{\mathrm{DB}}\), a target
+column \(c_g^\star\), and a binary label \(y_g\in\{0,1\}\). We denote the
+target cell located at \((r_g^\star,c_g^\star)\) by \(n_g^\star\). Its
+\emph{value} is masked and excluded from all cell and row encodings. Its
+structural metadata---the target column and semantic type, the seed table,
+and the seed timestamp---remain available because they specify the query
+rather than reveal its answer.
+The task identifier \(\kappa(g)\) determines this target schema information
+but does not select a task-specific parameter set. We present the binary
+formulation first; the not-yet-finalized regression extension is reserved
+for Section~\ref{sec:method:regression-placeholder}.
+
+For each query, the model performs four stages. First, it samples a bounded
+relational context centered at \(r_g^\star\). Second, it constructs two
+query-specific graphs: a candidate-augmented row graph
+\(\mathcal G_g^{\graphmain}\) and an auxiliary relation graph
+\(\mathcal G_g^{\graphrel}\). Third, \(P\) relation-graph layers encode how
+the sampled FK relation types interact and produce a condition vector for
+every retained FK edge; \(L\) row-graph layers then propagate typed messages
+among row and candidate nodes under those conditions. Finally, a shared
+readout compares the final seed representation with each candidate
+representation and converts their score difference into a binary
+probability. The base model uses the same row graph, initialization,
+message-passing operator, and readout, but sets every FK condition to zero.
+
+We use \(d\) for the common hidden width, \(d_{\mathrm{text}}\) for the
+dimension of precomputed textual features, \(F\) for the number of temporal
+frequencies, \(P\) for the number of relation-graph layers, and \(L\) for
+the number of row-graph layers. The classification configuration is
+\begin{equation}
+  d=256,
+  \qquad
+  d_{\mathrm{text}}=384,
+  \qquad
+  F=16,
+  \qquad
+  P=2,
+  \qquad
+  L=6.
+\label{eq:method:model-dimensions}
+\end{equation}
+
+Throughout this section, \(g\) indexes a query, \(r\) a database row,
+\(n\) a cell, \(k\) a candidate, and \(i,j\) generic row-graph nodes.
+Row-graph edges and layers are indexed by \(e\) and \(\ell\), whereas
+relation-graph nodes, edges, and layers are indexed by \(\rho\),
+\(\epsilon\), and \(p\). Bold lowercase symbols denote vectors, bold
+uppercase symbols denote matrices, calligraphic symbols denote sets or
+graphs, and unbold symbols denote scalars, indices, or discrete objects.
+All learnable parameters below are shared across tasks and query instances;
+therefore, no trainable parameter carries \(g\) or \(\kappa(g)\) as an
+index. Parameters are distinct across semantic types, edge types, and
+layers whenever such an index is shown.
+
+\subsection{Seed-Centered Relational Context Sampling}
+\label{sec:method:context-sampling}
+
+Applying the model directly to \(\mathcal G^{\mathrm{DB}}\) is generally
+intractable. For each query \(g\), we therefore run a bounded,
+seed-centered, priority-based hybrid traversal beginning at
+\(r_g^\star\). The traversal follows both foreign-to-primary
+(\(\mathsf{f2p}\)) and primary-to-foreign (\(\mathsf{p2f}\)) links and
+maintains a visited-row set so that a row is serialized at most once.
+Foreign-to-primary expansions use a prioritized last-in--first-out frontier
+and can therefore follow a chain of referenced parents depth-first. Once
+that frontier is empty, primary-to-foreign neighbors are taken from the
+shallowest nonempty traversal depth and randomized within that depth.
+
+Let the resulting non-padding cell sequence be
+\begin{equation}
+  \mathcal S_g
+  =
+  \operatorname{Sample}
+  \left(
+    \mathcal G^{\mathrm{DB}},
+    r_g^\star;
+    S_{\max},B_{\max}
+  \right),
+  \qquad
+  |\mathcal S_g|\le S_{\max},
+\label{eq:method:context-sample}
+\end{equation}
+where \(S_{\max}=2048\) is a \emph{cell} budget, not a row budget. Cells
+are appended row by row until the budget is exhausted, so the last retained
+row may be represented by only a prefix of its cells. Shorter sequences are
+padded only after the non-padding prefix has been constructed. The target
+cell can occupy a position in this serialized prefix, but its mask prevents
+it from entering \(\mathcal C_g^{\mathrm{in}}\) or any subsequent pooling
+operation.
+
+To prevent a high-degree primary row from exhausting the context,
+one reverse-FK expansion retains at most \(B_{\max}=256\) randomly selected
+database children. For forecasting queries, a reverse-FK neighbor is
+discarded when both its timestamp and the seed timestamp are present and
+the neighbor occurs after the seed. This causal filter is applied during
+primary-to-foreign expansion rather than globally to every sampled row.
+Task-defined leakage columns are also removed from the seed and from rows
+whose stored optional timestamp equals the seed timestamp; the
+implementation's equality rule includes the case in which both timestamps
+are missing.
+
+The sampler additionally exposes local-recency, peripheral-cell-cap, and
+self-label-dropout controls. They change which context cells remain visible
+but do not change the graph neural architecture defined below. The default
+hybrid traversal described above uses no additional local-recency quota;
+any nondefault sampling or label-dropout setting must therefore be reported
+as part of the experimental protocol rather than treated as a new model
+component.
+
+The cells actually supplied to the encoder are
+\begin{equation}
+  \mathcal C_g^{\mathrm{in}}
+  =
+  \left\{
+    n\in\mathcal S_g
+    \,\middle|\,
+    n\text{ is not masked}
+  \right\}.
+\label{eq:method:input-cell-set}
+\end{equation}
+Let \(r(n)\) and \(c(n)\) denote the row and column containing cell \(n\).
+The retained row set and the observed cells belonging to one retained row
+are, respectively,
+\begin{equation}
+\begin{aligned}
+  \mathcal R_g
+  &=
+  \{r(n):n\in\mathcal C_g^{\mathrm{in}}\},\\
+  \mathcal O_{g,r}
+  &=
+  \{n\in\mathcal C_g^{\mathrm{in}}:r(n)=r\},
+  \qquad r\in\mathcal R_g.
+\end{aligned}
+\label{eq:method:sampled-rows-and-cells}
+\end{equation}
+By construction, \(\mathcal O_{g,r}\neq\varnothing\) for every represented
+row and
+\begin{equation}
+  n_g^\star
+  \notin
+  \bigcup_{r\in\mathcal R_g}\mathcal O_{g,r}.
+\label{eq:method:target-exclusion}
+\end{equation}
+Thus, the target value cannot enter the model through either cell encoding
+or row pooling. The complete database graph in
+Eq.~\eqref{eq:method:database-graph} is used only for context selection;
+neural message passing operates on the two finite query-specific graphs
+defined next.
+
+\subsection{Query-Specific Graph Construction}
+\label{sec:method:graph-construction}
+
+\subsubsection{Candidate-Augmented Row Graph}
+\label{sec:method:row-graph}
+
+For query \(g\), the main prediction graph is the directed, typed
+multigraph
+\begin{equation}
+  \mathcal G_g^{\graphmain}
+  =
+  \bigl(
+    \mathcal V_g^{\graphmain},
+    \mathcal E_g^{\graphmain},
+    \tau_g,
+    \alpha_g;
+    r_g^\star
+  \bigr).
+\label{eq:method:main-graph}
+\end{equation}
+The semicolon emphasizes that \(r_g^\star\) is a distinguished query node
+rather than a separate node type. The node set is the disjoint union
+\begin{equation}
+\begin{aligned}
+  \mathcal V_g^{\graphmain}
+  &=
+  \mathcal V_g^{\mathrm{row}}
+  \mathbin{\dot\cup}
+  \mathcal V_g^{\mathrm{cand}},\\
+  \mathcal V_g^{\mathrm{row}}
+  &=
+  \mathcal R_g,
+  &
+  \mathcal V_g^{\mathrm{cand}}
+  &=
+  \{v_{g,0}^{\mathrm{cand}},v_{g,1}^{\mathrm{cand}}\}.
+\end{aligned}
+\label{eq:method:main-node-set}
+\end{equation}
+The candidate nodes \(v_{g,0}^{\mathrm{cand}}\) and
+\(v_{g,1}^{\mathrm{cand}}\) represent the hypotheses \textsc{False} and
+\textsc{True}, respectively. The target cell itself is not a graph node:
+\(n_g^\star\notin\mathcal V_g^{\graphmain}\), whereas its containing seed
+row satisfies \(r_g^\star\in\mathcal V_g^{\mathrm{row}}\).
+
+The edge-index set and available edge types are
+\begin{equation}
+\begin{aligned}
+  \mathcal E_g^{\graphmain}
+  &=
+  \mathcal E_g^{\mathsf{f2p}}
+  \mathbin{\dot\cup}
+  \mathcal E_g^{\mathsf{p2f}}
+  \mathbin{\dot\cup}
+  \mathcal E_g^{\mathsf{label}},\\
+  \mathcal T_{\graphmain}
+  &=
+  \{\mathsf{f2p},\mathsf{p2f},\mathsf{label}\}.
+\end{aligned}
+\label{eq:method:main-edge-set}
+\end{equation}
+The maps
+\begin{equation}
+  \tau_g:\mathcal E_g^{\graphmain}\to\mathcal T_{\graphmain},
+  \qquad
+  \alpha_g:\mathcal E_g^{\graphmain}\to\RR_{\ge0}
+\label{eq:method:main-edge-maps}
+\end{equation}
+assign each edge \(e\) its type \(\tau_e\coloneqq\tau_g(e)\) and fixed
+scalar weight \(\alpha_e\coloneqq\alpha_g(e)\). These weights are part of
+the graph input, not trainable parameters. For binary classification,
+\(\alpha_e=1\) for all three edge types.
+
+\subsubsection{Foreign-Key and Observed-Label Edges}
+\label{sec:method:row-graph-edges}
+
+The foreign-to-primary edges are the stored database FK edges whose two
+endpoints both survive context sampling:
+\begin{equation}
+  \mathcal E_g^{\mathsf{f2p}}
+  =
+  \left\{
+    e\in\mathcal E^{\mathrm{FK}}
+    \,\middle|\,
+    \rgsrc(e),\rgdst(e)\in\mathcal R_g
+  \right\}.
+\label{eq:method:f2p-edges}
+\end{equation}
+Here \(\rgsrc(e)\) is a sampled child row and \(\rgdst(e)\) is its sampled
+parent. The fixed-width stored representation requires at most five
+foreign-to-primary neighbors per row. For every retained forward edge
+\(e\), we create a distinct reverse edge \(\bar e\):
+\begin{equation}
+  \mathcal E_g^{\mathsf{p2f}}
+  =
+  \left\{
+    \bar e
+    \,\middle|\,
+    \begin{array}{l}
+      e\in\mathcal E_g^{\mathsf{f2p}},\\[-1mm]
+      \rgsrc(\bar e)=\rgdst(e),\quad
+      \rgdst(\bar e)=\rgsrc(e)
+    \end{array}
+  \right\}.
+\label{eq:method:p2f-edges}
+\end{equation}
+Consequently, \(\tau_e=\mathsf{f2p}\),
+\(\tau_{\bar e}=\mathsf{p2f}\), and
+\(\alpha_e=\alpha_{\bar e}=1\). The two directions preserve the same
+underlying FK identity but use different message transformations.
+
+Observed-label edges inject visible, target-aligned supervision from the
+sampled context into the output candidates. Define
+\begin{equation}
+  \mathcal R_g^{\mathrm{lab}}
+  =
+  \left\{
+    r\in\mathcal R_g\setminus\{r_g^\star\}
+    \,\middle|\,
+    \begin{array}{l}
+      \tblname(r)=\tblname(r_g^\star),\\[-1mm]
+      \exists n\in\mathcal O_{g,r}:c(n)=c_g^\star
+    \end{array}
+  \right\}.
+\label{eq:method:observed-label-rows}
+\end{equation}
+For \(r\in\mathcal R_g^{\mathrm{lab}}\), let
+\(y_{g,r}\in\{0,1\}\) denote the visible Boolean value in column
+\(c_g^\star\). This contextual label is distinct from the unknown query
+label \(y_g\). We add one directed edge to the matching candidate:
+\begin{equation}
+  \mathcal E_g^{\mathsf{label}}
+  =
+  \left\{
+    e_{g,r}^{\mathrm{label}}
+    =
+    \bigl(r,v_{g,y_{g,r}}^{\mathrm{cand}}\bigr)
+    \,\middle|\,
+    r\in\mathcal R_g^{\mathrm{lab}}
+  \right\},
+\label{eq:method:label-edges}
+\end{equation}
+where
+\(\tau_{e_{g,r}^{\mathrm{label}}}=\mathsf{label}\) and
+\(\alpha_{e_{g,r}^{\mathrm{label}}}=1\). No candidate-to-row reverse edge
+is created, and candidate nodes have no outgoing edges in the current
+construction. Because the seed is excluded from
+\(\mathcal R_g^{\mathrm{lab}}\), its target cannot create a label edge.
+Thus, label edges act as in-graph demonstrations without exposing the
+answer to the current query. Disabling observed-label edges for an ablation
+sets \(\mathcal E_g^{\mathsf{label}}=\varnothing\) without changing the FK
+edges or the propagation equations.
+
+\subsubsection{Auxiliary Relation Graph}
+\label{sec:method:relation-graph}
+
+The generic row-graph types \(\mathsf{f2p}\) and \(\mathsf{p2f}\) identify
+direction but not the schema-level role of an FK link. We therefore define
+the auxiliary directed, typed multigraph
+\begin{equation}
+  \mathcal G_g^{\graphrel}
+  =
+  \bigl(
+    \mathcal V_g^{\graphrel},
+    \mathcal E_g^{\graphrel},
+    \eta_g;
+    \mathcal Q_g^{\graphrel}
+  \bigr).
+\label{eq:method:relation-graph}
+\end{equation}
+For each \(e\in\mathcal E_g^{\mathsf{f2p}}\), its ordered table-pair
+relation is
+\begin{equation}
+  \chi_g(e)
+  =
+  \bigl(
+    \tblname(\rgsrc(e)),
+    \tblname(\rgdst(e))
+  \bigr),
+\label{eq:method:fk-to-relation}
+\end{equation}
+where the first component is the child table and the second is the parent
+table. The relation-node set contains the unique table pairs present in the
+sampled row graph:
+\begin{equation}
+  \mathcal V_g^{\graphrel}
+  =
+  \{\chi_g(e):e\in\mathcal E_g^{\mathsf{f2p}}\}.
+\label{eq:method:relation-node-set}
+\end{equation}
+Multiple row-level links with the same ordered table pair share one
+query-local relation node \(\rho\); relation nodes from different queries
+\(g\ne g'\) are never merged. The current construction deliberately
+collapses multiple FK columns connecting the same ordered pair of tables.
+For the reverse copy of a retained FK link, we define
+\begin{equation}
+  \chi_g(\bar e)\coloneqq\chi_g(e),
+  \qquad e\in\mathcal E_g^{\mathsf{f2p}},
+\label{eq:method:reverse-fk-relation}
+\end{equation}
+so the forward and reverse directions map to the same relation node.
+
+For \(\rho\in\mathcal V_g^{\graphrel}\), let
+\(\operatorname{child}(\rho)\) and \(\operatorname{parent}(\rho)\) denote
+the two components of its ordered table pair. For distinct relation nodes
+\(\rho,\rho'\), four predicates define directed structural edge types:
+\begin{equation}
+\begin{aligned}
+  \mathsf{match}_{\mathsf{h2h}}(\rho,\rho')
+  &:\ \operatorname{child}(\rho)=\operatorname{child}(\rho'),
+  &
+  \mathsf{match}_{\mathsf{t2t}}(\rho,\rho')
+  &:\ \operatorname{parent}(\rho)=\operatorname{parent}(\rho'),\\
+  \mathsf{match}_{\mathsf{h2t}}(\rho,\rho')
+  &:\ \operatorname{child}(\rho)=\operatorname{parent}(\rho'),
+  &
+  \mathsf{match}_{\mathsf{t2h}}(\rho,\rho')
+  &:\ \operatorname{parent}(\rho)=\operatorname{child}(\rho').
+\end{aligned}
+\label{eq:method:relation-predicates}
+\end{equation}
+Here \emph{head} denotes the child table and \emph{tail} the parent table.
+With
+\begin{equation}
+  \mathcal T_{\graphrel}
+  =
+  \{\mathsf{h2h},\mathsf{t2t},\mathsf{h2t},\mathsf{t2h}\},
+\label{eq:method:relation-edge-types}
+\end{equation}
+the complete relation-edge index set is
+\begin{equation}
+  \mathcal E_g^{\graphrel}
+  =
+  \left\{
+    (\rho,\rho',\eta)
+    \,\middle|\,
+    \rho\ne\rho',\ 
+    \eta\in\mathcal T_{\graphrel},\ 
+    \mathsf{match}_\eta(\rho,\rho')
+  \right\}.
+\label{eq:method:relation-edge-set}
+\end{equation}
+The map
+\(\eta_g:\mathcal E_g^{\graphrel}\to\mathcal T_{\graphrel}\) assigns
+each relation edge \(\epsilon\) its type
+\(\eta_\epsilon\coloneqq\eta_g(\epsilon)\). All relation-edge weights are
+one. If multiple predicates hold for the same ordered endpoint pair, the
+implementation retains parallel edges carrying different type tags.
+When the sampled row graph contains no FK edge,
+\(\mathcal V_g^{\graphrel}=\mathcal E_g^{\graphrel}=\varnothing\), and the
+relation branch is skipped.
+
+\subsubsection{Query-Relation Marking}
+\label{sec:method:query-relation-marking}
+
+The relation graph becomes query specific through the distinguished set of
+relations in which the seed appears as the FK child/source:
+\begin{equation}
+  \mathcal Q_g^{\graphrel}
+  =
+  \left\{
+    \rho\in\mathcal V_g^{\graphrel}
+    \,\middle|\,
+    \begin{array}{l}
+      \exists e\in\mathcal E_g^{\mathsf{f2p}}:\\[-1mm]
+      \rgsrc(e)=r_g^\star\ \text{and}\ \chi_g(e)=\rho
+    \end{array}
+  \right\}.
+\label{eq:method:query-relation-set}
+\end{equation}
+A relation is therefore not marked merely because the seed is its parent.
+One seed can mark multiple relations, and no relation is marked when the
+seed has no retained outgoing FK edge.
+The set \(\mathcal Q_g^{\graphrel}\) supplies the boundary signal used to
+initialize relation-node states in
+Section~\ref{sec:method:candidate-relation-initialization}; it is the only
+query-boundary marker provided to the auxiliary relation graph.
+
+\subsection{Initial Node Representations}
+\label{sec:method:node-initialization}
+
+\subsubsection{Type-Aware Cell Encoding}
+\label{sec:method:cell-encoding}
+
+Let \(n\in\mathcal O_{g,r}\) be an observed input cell in row \(r\), and
+let
+\begin{equation}
+  \sigma_{r,n}
+  \in
+  \Sigma_{\mathrm{sem}}
+  =
+  \{\mathsf{num},\mathsf{text},\mathsf{datetime},\mathsf{bool}\}
+\label{eq:method:semantic-types}
+\end{equation}
+denote its semantic type. Each cell supplies a preprocessed value feature
+\(\mathbf u_{r,n}^{\mathrm{val}}\in\RR^{d_{\sigma_{r,n}}}\) and a
+precomputed column-name feature
+\(\mathbf u_{r,n}^{\mathrm{col}}\in\RR^{d_{\mathrm{text}}}\). Text values
+and column names use \(d_{\mathrm{text}}=384\)-dimensional text features;
+numeric, datetime, and Boolean values are represented by scalar inputs.
+Thus,
+\begin{equation}
+  d_\sigma
+  =
+  \begin{cases}
+    d_{\mathrm{text}}, & \sigma=\mathsf{text},\\
+    1, & \sigma\in\{\mathsf{num},\mathsf{datetime},\mathsf{bool}\}.
+  \end{cases}
+\label{eq:method:value-input-dimensions}
+\end{equation}
+
+A type-specific affine map encodes the value, while a single shared affine
+map encodes the column name. Their normalized outputs are added:
+\begin{equation}
+\begin{aligned}
+  \mathbf x_{r,n}
+  ={}&
+  \rmsnorm_{\mathrm{col}}
+  \left(
+    \mathbf W_{\mathrm{col}}\mathbf u_{r,n}^{\mathrm{col}}
+    +\mathbf b_{\mathrm{col}}
+  \right)\\
+  &+
+  \rmsnorm_{\sigma_{r,n}}
+  \left(
+    \mathbf W_{\mathrm{val},\sigma_{r,n}}
+    \mathbf u_{r,n}^{\mathrm{val}}
+    +\mathbf b_{\mathrm{val},\sigma_{r,n}}
+  \right)
+  \in\RR^d.
+\end{aligned}
+\label{eq:method:cell-encoding}
+\end{equation}
+The trainable affine parameters have domains
+\begin{equation}
+\begin{aligned}
+  \mathbf W_{\mathrm{col}}
+  &\in\RR^{d\times d_{\mathrm{text}}},
+  &
+  \mathbf b_{\mathrm{col}}
+  &\in\RR^d,\\
+  \mathbf W_{\mathrm{val},\sigma}
+  &\in\RR^{d\times d_\sigma},
+  &
+  \mathbf b_{\mathrm{val},\sigma}
+  &\in\RR^d,
+  \qquad \sigma\in\Sigma_{\mathrm{sem}}.
+\end{aligned}
+\label{eq:method:cell-parameter-domains}
+\end{equation}
+Value encoders are distinct across semantic types; the column-name encoder
+is shared across all columns, rows, tasks, and queries.
+
+For \(\boldsymbol\zeta\in\RR^d\), every RMSNorm module indexed by
+\(\nu\in\{\mathrm{col}\}\cup\Sigma_{\mathrm{sem}}\) is
+\begin{equation}
+  \rmsnorm_\nu(\boldsymbol\zeta)
+  =
+  \boldsymbol\gamma_\nu\odot
+  \frac{\boldsymbol\zeta}{
+    \sqrt{d^{-1}\|\boldsymbol\zeta\|_2^2+\varepsilon_{\mathrm{rms}}}
+  },
+  \qquad
+  \boldsymbol\gamma_\nu\in\RR^d,
+\label{eq:method:rmsnorm}
+\end{equation}
+where \(\odot\) is element-wise multiplication and
+\(\varepsilon_{\mathrm{rms}}>0\) is a numerical stabilizer. Each module has
+its own learned scale \(\boldsymbol\gamma_\nu\). Separate value encoders and
+normalizers handle heterogeneous value modalities; the column-name term
+distinguishes fields whose values look similar but whose semantics differ.
+Because \(n_g^\star\notin\mathcal C_g^{\mathrm{in}}\), neither the target
+value feature nor a target-cell representation contributes to the seed row.
+
+\subsubsection{Permutation-Invariant Cell-to-Row Pooling}
+\label{sec:method:row-pooling}
+
+For each \(r\in\mathcal R_g\), mean pooling summarizes the complete set of
+observed cells:
+\begin{equation}
+  \overline{\mathbf x}_{g,r}
+  =
+  \frac{1}{|\mathcal O_{g,r}|}
+  \sum_{n\in\mathcal O_{g,r}}\mathbf x_{r,n}
+  \in\RR^d.
+\label{eq:method:mean-pooling}
+\end{equation}
+Coordinate-wise max pooling retains the strongest response in each hidden
+dimension:
+\begin{equation}
+  [\mathbf x_{g,r}^{\max}]_q
+  =
+  \max_{n\in\mathcal O_{g,r}}[\mathbf x_{r,n}]_q,
+  \qquad q=1,\ldots,d.
+\label{eq:method:max-pooling}
+\end{equation}
+Their concatenation is projected back to the common hidden width:
+\begin{equation}
+  \overline{\mathbf h}_{g,r}
+  =
+  \mathbf W_{\mathrm{c2r}}
+  [\overline{\mathbf x}_{g,r}\vcat\mathbf x_{g,r}^{\max}]
+  +\mathbf b_{\mathrm{c2r}}
+  \in\RR^d,
+\label{eq:method:cell-to-row}
+\end{equation}
+with
+\begin{equation}
+  \mathbf W_{\mathrm{c2r}}\in\RR^{d\times2d},
+  \qquad
+  \mathbf b_{\mathrm{c2r}}\in\RR^d.
+\label{eq:method:c2r-parameter-domains}
+\end{equation}
+Mean pooling captures overall row content, whereas max pooling preserves
+salient cell-level signals that could be diluted by averaging. Since both
+operate on the set \(\mathcal O_{g,r}\), the resulting row representation
+is invariant to the order in which cells were serialized. In the default
+model, Eq.~\eqref{eq:method:cell-to-row} is a single affine projection with
+no intervening ReLU or normalization; attention pooling is an optional
+ablation rather than part of the mean--max architecture specified here.
+
+\subsubsection{Relative-Time and Seed Encoding}
+\label{sec:method:time-seed-encoding}
+
+Let \(T_r\) be the optional timestamp of row \(r\), stored in seconds. We
+express time relative to the seed in days:
+\begin{equation}
+  \Delta t_{g,r}
+  =
+  \frac{T_{r_g^\star}-T_r}{86400}.
+\label{eq:method:relative-time}
+\end{equation}
+The division by \(86400\) converts seconds to days, matching the units of
+the frequency bank. If either required timestamp is unavailable, the
+implementation uses \(\Delta t_{g,r}=0\).
+
+For \(f=0,\ldots,F-1\), define fixed wavelengths and angular frequencies
+by
+\begin{equation}
+  \lambda_f
+  =
+  10^{4.56f/(F-1)}\ \text{days},
+  \qquad
+  \omega_f
+  =
+  \frac{2\pi}{\lambda_f}.
+\label{eq:method:temporal-frequencies}
+\end{equation}
+Writing
+\(\boldsymbol\omega=[\omega_0,\ldots,\omega_{F-1}]^\top\in\RR^F\), the
+multi-scale temporal feature is
+\begin{equation}
+  \boldsymbol\phi_{\mathrm{time}}(\Delta t_{g,r})
+  =
+  [
+    \cos(\Delta t_{g,r}\boldsymbol\omega)
+    \vcat
+    \sin(\Delta t_{g,r}\boldsymbol\omega)
+  ]
+  \in\RR^{2F},
+\label{eq:method:time-feature}
+\end{equation}
+where the trigonometric functions act element-wise. The frequency vector is
+a fixed buffer, not a learned parameter. With \(F=16\), the wavelengths are
+logarithmically distributed from one day to approximately one hundred
+years; short wavelengths resolve nearby times, while long wavelengths vary
+slowly enough to distinguish long horizons.
+
+The initial representation of row node \(r\) is
+\begin{equation}
+  \mathbf h_{g,r}^{(0)}
+  =
+  \overline{\mathbf h}_{g,r}
+  +\mathbf W_{\mathrm{time}}
+   \boldsymbol\phi_{\mathrm{time}}(\Delta t_{g,r})
+  +\mathbf b_{\mathrm{time}}
+  +\Indic[r=r_g^\star]\mathbf e_{\mathrm{seed}}
+  \in\RR^d,
+\label{eq:method:row-initialization}
+\end{equation}
+where
+\begin{equation}
+  \mathbf W_{\mathrm{time}}\in\RR^{d\times2F},
+  \qquad
+  \mathbf b_{\mathrm{time}}\in\RR^d,
+  \qquad
+  \mathbf e_{\mathrm{seed}}\in\RR^d.
+\label{eq:method:time-seed-parameter-domains}
+\end{equation}
+The same learned temporal projection is shared by every row, task, and
+query. The learned marker \(\mathbf e_{\mathrm{seed}}\) is added only to the
+current seed and makes the prediction boundary explicitly visible to the
+row GNN. Notice that a missing timestamp sets \(\Delta t_{g,r}=0\), not the
+entire temporal contribution to zero: the row still receives
+\(\mathbf W_{\mathrm{time}}\boldsymbol\phi_{\mathrm{time}}(0)
++\mathbf b_{\mathrm{time}}\).
+
+\subsubsection{Candidate- and Relation-Node Initialization}
+\label{sec:method:candidate-relation-initialization}
+
+The two classification candidates are represented by the fixed scalar
+values \(0\) and \(1\). To distinguish a candidate index from a generic
+graph-node index, define the shorthand
+\begin{equation}
+  \mathbf h_{g,k}^{\mathrm{cand},(\ell)}
+  \coloneqq
+  \mathbf h_{g,v_{g,k}^{\mathrm{cand}}}^{(\ell)},
+  \qquad k\in\{0,1\}.
+\label{eq:method:candidate-state-shorthand}
+\end{equation}
+The initial candidate state reuses exactly the Boolean value affine map and
+RMSNorm from Eq.~\eqref{eq:method:cell-encoding}:
+\begin{equation}
+  \mathbf h_{g,k}^{\mathrm{cand},(0)}
+  =
+  \rmsnorm_{\mathsf{bool}}
+  \left(
+    \mathbf W_{\mathrm{val},\mathsf{bool}}[k]
+    +\mathbf b_{\mathrm{val},\mathsf{bool}}
+  \right)
+  +\mathbf e_{\mathrm{cand}}
+  \in\RR^d,
+  \qquad k\in\{0,1\},
+\label{eq:method:candidate-initialization}
+\end{equation}
+where \([k]\in\RR^1\),
+\(\mathbf W_{\mathrm{val},\mathsf{bool}}\in\RR^{d\times1}\),
+\(\mathbf b_{\mathrm{val},\mathsf{bool}}\in\RR^d\), and
+\(\mathbf e_{\mathrm{cand}}\in\RR^d\). Therefore, False and True are not
+two independent learned embedding vectors. They are canonical Boolean
+values passed through a shared encoder and augmented by the same learned
+candidate-type marker. Candidate initialization contains neither a target
+column embedding nor a task-specific embedding. Before graph propagation,
+the same candidate \(k\) has the same initial representation in every
+query; its representation becomes query specific only through subsequent
+message passing.
+
+For relation node \(\rho\in\mathcal V_g^{\graphrel}\), the initial state is
+\begin{equation}
+  \mathbf z_{g,\rho}^{(0)}
+  =
+  \Indic[\rho\in\mathcal Q_g^{\graphrel}]
+  \mathbf e_{\mathrm{relquery}}
+  \in\RR^d,
+\label{eq:method:relation-initialization}
+\end{equation}
+where \(\mathbf e_{\mathrm{relquery}}\in\RR^d\) is a learned marker shared
+across relation nodes, tasks, and queries. Query-relation nodes receive this
+marker; all other relation nodes start at zero. No trainable schema-ID or
+table-pair embedding is assigned to a relation node, so relation identity is
+expressed through graph structure and the query marker rather than a fixed
+lookup table.
+
+The marker \(\mathbf e_{\mathrm{seed}}\) is shared by all seed rows,
+\(\mathbf e_{\mathrm{cand}}\) by both candidates, and
+\(\mathbf e_{\mathrm{relquery}}\) by all marked relation nodes. In the
+implementation, the seed and candidate markers are initialized to zero,
+whereas the relation-query marker is initialized with standard deviation
+\(0.02\); all are trainable thereafter. The main-graph and relation-graph
+propagation networks use separate parameters. Within either network,
+parameters carrying an edge-type or layer index are not shared across
+different values of that index.
+
+\subsection{Relation-Conditioned Message Passing}
+\label{sec:method:message-passing}
+
+\subsubsection{Relation-Graph Propagation}
+\label{sec:method:relation-propagation}
+
+The auxiliary relation graph is processed completely before any row-graph
+layer is evaluated. Let \(\epsilon:\rho'\to\rho\) be a directed relation
+edge with type
+\(\eta_\epsilon\equiv\eta_g(\epsilon)\in\mathcal T_{\graphrel}\). At
+relation layer \(p\in\{1,\ldots,P\}\), its message is
+\begin{equation}
+  \widetilde{\mathbf m}_{g,\epsilon}^{(p)}
+  =
+  \relu\!\left(
+    \mathbf U_{\eta_\epsilon}^{(p)}
+    \mathbf z_{g,\rho'}^{(p-1)}
+    +\mathbf b_{\graphrel,\eta_\epsilon}^{(p)}
+  \right)
+  \in\RR^d.
+\label{eq:method:relation-message}
+\end{equation}
+The type-specific parameters satisfy
+\begin{equation}
+  \mathbf U_\eta^{(p)}\in\RR^{d\times d},
+  \qquad
+  \mathbf b_{\graphrel,\eta}^{(p)}\in\RR^d,
+  \qquad
+  \eta\in\mathcal T_{\graphrel}.
+\label{eq:method:relation-edge-parameter-domains}
+\end{equation}
+We use \(\mathbf U\) for relation-graph matrices and \(\mathbf W\) for
+row-graph matrices so that parameters from the two networks cannot be
+confused. Every relation-edge weight equals one, and relation messages do
+not contain an additional condition term.
+
+For relation node \(\rho\), define its incoming edge-index set as
+\begin{equation}
+  \mathcal E_{g,\graphrel}^{-}(\rho)
+  =
+  \{\epsilon\in\mathcal E_g^{\graphrel}:\rgdst(\epsilon)=\rho\}.
+\label{eq:method:relation-incoming-edges}
+\end{equation}
+The incoming messages are averaged using a denominator clamped at one:
+\begin{equation}
+  \widetilde{\mathbf a}_{g,\rho}^{(p)}
+  =
+  \frac{
+    \displaystyle
+    \sum_{\epsilon\in\mathcal E_{g,\graphrel}^{-}(\rho)}
+    \widetilde{\mathbf m}_{g,\epsilon}^{(p)}
+  }{
+    \displaystyle
+    \max\!\left(1,|\mathcal E_{g,\graphrel}^{-}(\rho)|\right)
+  }
+  \in\RR^d.
+\label{eq:method:relation-aggregation}
+\end{equation}
+If \(\rho\) has no incoming relation edge, the numerator is the empty sum
+\(\mathbf0\), the denominator is one, and hence the aggregate is
+\(\mathbf0\).
+
+The relation-node update combines the previous representation, a learned
+self transformation, and the incoming aggregate:
+\begin{equation}
+  \mathbf z_{g,\rho}^{(p)}
+  =
+  \layernorm_{\graphrel}^{(p)}
+  \left(
+    \mathbf z_{g,\rho}^{(p-1)}
+    +\relu\!\left(
+      \mathbf U_{\mathrm{self}}^{(p)}
+      \mathbf z_{g,\rho}^{(p-1)}
+      +\mathbf b_{\graphrel,\mathrm{self}}^{(p)}
+    \right)
+    +\widetilde{\mathbf a}_{g,\rho}^{(p)}
+  \right)
+  \in\RR^d,
+\label{eq:method:relation-update}
+\end{equation}
+where
+\begin{equation}
+  \mathbf U_{\mathrm{self}}^{(p)}\in\RR^{d\times d},
+  \qquad
+  \mathbf b_{\graphrel,\mathrm{self}}^{(p)}\in\RR^d.
+\label{eq:method:relation-self-parameter-domains}
+\end{equation}
+For \(\boldsymbol\zeta\in\RR^d\), the layer-specific normalization is
+\begin{equation}
+  \layernorm_{\graphrel}^{(p)}(\boldsymbol\zeta)
+  =
+  \boldsymbol\gamma_{\graphrel}^{(p)}\odot
+  \frac{
+    \boldsymbol\zeta-\mu(\boldsymbol\zeta)\mathbf1
+  }{
+    \sqrt{\operatorname{var}(\boldsymbol\zeta)+\varepsilon_{\mathrm{ln}}}
+  }
+  +\boldsymbol\beta_{\graphrel}^{(p)},
+\label{eq:method:relation-layernorm}
+\end{equation}
+with learned
+\(\boldsymbol\gamma_{\graphrel}^{(p)},
+\boldsymbol\beta_{\graphrel}^{(p)}\in\RR^d\) and
+\(\varepsilon_{\mathrm{ln}}=10^{-5}\). Here
+\(\mu(\boldsymbol\zeta)\) and
+\(\operatorname{var}(\boldsymbol\zeta)\) are the mean and variance across
+the \(d\) feature coordinates used by LayerNorm, and
+\(\mathbf1\in\RR^d\) is the
+all-ones vector. The four relation-edge types use
+four different affine transformations within a layer, and the \(P=2\)
+relation layers do not share their edge, self, or LayerNorm parameters.
+
+\subsubsection{Relation-Conditioned Row-Graph Propagation}
+\label{sec:method:row-propagation}
+
+After the \(P=2\) relation layers, the final state of the relation node
+associated with each retained FK edge is projected into the row-graph
+hidden space. For
+\(e\in\mathcal E_g^{\mathsf{f2p}}\cup
+\mathcal E_g^{\mathsf{p2f}}\), define
+\begin{equation}
+  \boldsymbol\delta_e
+  =
+  \mathbf W_{\mathrm{cond}}
+  \mathbf z_{g,\chi_g(e)}^{(P)}
+  +\mathbf b_{\mathrm{cond}}
+  \in\RR^d,
+\label{eq:method:fk-condition}
+\end{equation}
+where
+\begin{equation}
+  \mathbf W_{\mathrm{cond}}\in\RR^{d\times d},
+  \qquad
+  \mathbf b_{\mathrm{cond}}\in\RR^d.
+\label{eq:method:condition-parameter-domains}
+\end{equation}
+All row-level FK edges mapped to the same query-local relation node receive
+the same relation state. In particular, the two directed copies of one FK
+link satisfy
+\begin{equation}
+  \boldsymbol\delta_{\bar e}=\boldsymbol\delta_e.
+\label{eq:method:shared-forward-reverse-condition}
+\end{equation}
+They nevertheless use different source-node states and different
+\(\mathsf{f2p}\) and \(\mathsf{p2f}\) transformations. For every observed
+label edge, we define \(\boldsymbol\delta_e=\mathbf0\). Both
+\(\mathbf W_{\mathrm{cond}}\) and \(\mathbf b_{\mathrm{cond}}\) are
+zero-initialized. The condition vectors are computed once after relation
+propagation and remain fixed while the six row-graph layers update their
+node states.
+
+Under any fixed ordering in which row nodes precede candidate nodes, the
+initial row-graph state matrix is
+\begin{equation}
+  \mathbf H_g^{(0)}
+  =
+  \operatorname{Concat}_{\mathrm{node}}
+  \left(
+    \{\mathbf h_{g,r}^{(0)}:r\in\mathcal R_g\},
+    \{\mathbf h_{g,k}^{\mathrm{cand},(0)}:k\in\{0,1\}\}
+  \right)
+  \in\RR^{(|\mathcal R_g|+2)\times d}.
+\label{eq:method:main-initial-state}
+\end{equation}
+Thus, candidate nodes are present during all message-passing layers rather
+than being appended only at readout time.
+
+Consider a directed row-graph edge
+\(e:j\to i\), meaning
+\(j=\rgsrc(e)\) and \(i=\rgdst(e)\). At layer
+\(\ell\in\{1,\ldots,L\}\), its weighted, typed message is
+\begin{equation}
+  \mathbf m_{g,e}^{(\ell)}
+  =
+  \alpha_e\,
+  \relu\!\left(
+    \mathbf W_{\tau_e}^{(\ell)}
+    \mathbf h_{g,j}^{(\ell-1)}
+    +\mathbf b_{\tau_e}^{(\ell)}
+    +\boldsymbol\delta_e
+  \right)
+  \in\RR^d,
+\label{eq:method:main-message}
+\end{equation}
+where
+\begin{equation}
+  \mathbf W_\tau^{(\ell)}\in\RR^{d\times d},
+  \qquad
+  \mathbf b_\tau^{(\ell)}\in\RR^d,
+  \qquad
+  \tau\in\mathcal T_{\graphmain}.
+\label{eq:method:main-edge-parameter-domains}
+\end{equation}
+The condition is added \emph{after} the type-specific affine transformation.
+In particular, the implemented and non-implemented alternatives are
+\begin{equation}
+  \underbrace{
+    \mathbf W_{\tau_e}^{(\ell)}\mathbf h_{g,j}^{(\ell-1)}
+    +\mathbf b_{\tau_e}^{(\ell)}+\boldsymbol\delta_e
+  }_{\text{implemented}}
+  \ne
+  \underbrace{
+    \mathbf W_{\tau_e}^{(\ell)}
+    (\mathbf h_{g,j}^{(\ell-1)}+\boldsymbol\delta_e)
+    +\mathbf b_{\tau_e}^{(\ell)}
+  }_{\text{not used}}.
+\label{eq:method:condition-placement}
+\end{equation}
+The scalar \(\alpha_e\) multiplies the complete post-ReLU vector and is not
+a component of the learned matrix \(\mathbf W_{\tau_e}^{(\ell)}\).
+
+For node \(i\), define its incoming edge-index set and total incoming
+weight as
+\begin{equation}
+\begin{aligned}
+  \mathcal E_{g,\graphmain}^{-}(i)
+  &=
+  \{e\in\mathcal E_g^{\graphmain}:\rgdst(e)=i\},\\
+  \deg_{g,\alpha}(i)
+  &=
+  \sum_{e\in\mathcal E_{g,\graphmain}^{-}(i)}\alpha_e.
+\end{aligned}
+\label{eq:method:main-incoming-degree}
+\end{equation}
+Messages from \(\mathsf{f2p}\), \(\mathsf{p2f}\), and
+\(\mathsf{label}\) edges enter a single shared aggregate:
+\begin{equation}
+  \mathbf a_{g,i}^{(\ell)}
+  =
+  \frac{
+    \displaystyle
+    \sum_{e\in\mathcal E_{g,\graphmain}^{-}(i)}
+    \mathbf m_{g,e}^{(\ell)}
+  }{
+    \displaystyle
+    \max\!\left(1,\deg_{g,\alpha}(i)\right)
+  }
+  \in\RR^d.
+\label{eq:method:main-aggregation}
+\end{equation}
+The denominator is the combined weight of all three incoming edge types,
+not a separate normalization for each type. The lower bound avoids division
+by zero and means that the expression is not a strict weighted average when
+\(0<\deg_{g,\alpha}(i)<1\). If there is no incoming edge, the empty numerator
+and clamped denominator give \(\mathbf a_{g,i}^{(\ell)}=\mathbf0\).
+
+The node update consists of an identity residual, a learned self
+transformation, and the incoming aggregate:
+\begin{equation}
+  \mathbf h_{g,i}^{(\ell)}
+  =
+  \layernorm_{\graphmain}^{(\ell)}
+  \left(
+    \mathbf h_{g,i}^{(\ell-1)}
+    +\relu\!\left(
+      \mathbf W_{\mathrm{self}}^{(\ell)}
+      \mathbf h_{g,i}^{(\ell-1)}
+      +\mathbf b_{\mathrm{self}}^{(\ell)}
+    \right)
+    +\mathbf a_{g,i}^{(\ell)}
+  \right)
+  \in\RR^d,
+\label{eq:method:main-update}
+\end{equation}
+where
+\begin{equation}
+  \mathbf W_{\mathrm{self}}^{(\ell)}\in\RR^{d\times d},
+  \qquad
+  \mathbf b_{\mathrm{self}}^{(\ell)}\in\RR^d.
+\label{eq:method:main-self-parameter-domains}
+\end{equation}
+The main LayerNorm is defined analogously to
+Eq.~\eqref{eq:method:relation-layernorm}, with independent learned
+\(\boldsymbol\gamma_{\graphmain}^{(\ell)},
+\boldsymbol\beta_{\graphmain}^{(\ell)}\in\RR^d\) for each layer.
+
+The graph structure, scalar weights, and conditions stay fixed across
+layers, while messages are recomputed from the newly updated source states:
+\begin{equation}
+  \mathbf H_g^{(\ell)}
+  =
+  \operatorname{MainMPLayer}^{(\ell)}
+  \left(
+    \mathbf H_g^{(\ell-1)},
+    \mathcal G_g^{\graphmain},
+    \{\boldsymbol\delta_e\}_{e\in\mathcal E_g^{\graphmain}}
+  \right),
+  \qquad \ell=1,\ldots,L.
+\label{eq:method:main-layer-stack}
+\end{equation}
+For \(L=6\), every layer owns a distinct self transform, three distinct
+edge-type transforms, and its own LayerNorm. Candidate nodes have no FK
+neighbors and no outgoing edges. Their incoming aggregate can therefore
+contain only observed-label messages; when no such edge is present, they
+still evolve through the residual and self-transformation paths. There is
+no candidate-to-row feedback.
+
+The computation order is strictly
+\begin{equation}
+  \underbrace{\mathcal G_g^{\graphrel}
+  \xrightarrow{\ P=2\ \text{layers}\ }
+  \{\boldsymbol\delta_e\}}_{\text{relation encoding}}
+  \quad\longrightarrow\quad
+  \underbrace{\mathcal G_g^{\graphmain}
+  \xrightarrow{\ L=6\ \text{layers}\ }
+  \mathbf H_g^{(L)}}_{\text{row and candidate encoding}}.
+\label{eq:method:two-stage-propagation}
+\end{equation}
+The relation network is not interleaved between row-graph layers.
+
+\subsubsection{Base Model as a Special Case}
+\label{sec:method:base-special-case}
+
+The base and relation-conditioned variants share the sampled context, main
+graph, cell, row, and candidate initialization, six-layer row GNN, readout, and
+classification loss. Their only difference inside the row GNN is whether an
+FK message receives \(\boldsymbol\delta_e\). For an FK edge, the base model
+computes the following condition-free message:
+\begin{equation}
+  \mathbf m_{g,e,\mathrm{base}}^{(\ell)}
+  =
+  \alpha_e\,
+  \relu\!\left(
+    \mathbf W_{\tau_e}^{(\ell)}
+    \mathbf h_{g,\rgsrc(e)}^{(\ell-1)}
+    +\mathbf b_{\tau_e}^{(\ell)}
+  \right).
+\label{eq:method:base-message}
+\end{equation}
+In the relation-conditioned model, an FK edge instead uses
+\begin{equation}
+  \mathbf m_{g,e,\mathrm{rel}}^{(\ell)}
+  =
+  \alpha_e\,
+  \relu\!\left(
+    \mathbf W_{\tau_e}^{(\ell)}
+    \mathbf h_{g,\rgsrc(e)}^{(\ell-1)}
+    +\mathbf b_{\tau_e}^{(\ell)}
+    +\boldsymbol\delta_e
+  \right).
+\label{eq:method:rel-message}
+\end{equation}
+Equivalently, both cases are summarized by
+\begin{equation}
+  \boldsymbol\delta_e
+  =
+  \begin{cases}
+    \mathbf0,
+      & \text{base model or observed-label edge},\\
+    \mathbf W_{\mathrm{cond}}
+      \mathbf z_{g,\chi_g(e)}^{(P)}+\mathbf b_{\mathrm{cond}},
+      & \text{relation-conditioned FK edge}.
+  \end{cases}
+\label{eq:method:base-rel-condition}
+\end{equation}
+At code level, disabling the relation graph omits its query marker,
+relation layers, and condition projection; the main MPLayer is then called
+without an FK-condition tensor. Label edges are unconditioned in both
+variants. Because the condition projection is zero-initialized, a
+relation-conditioned model initially has zero FK conditions and matches the
+base message function provided the two models' main-graph parameters are
+the same. If a sampled query contains no FK edge, the auxiliary relation
+branch has no effect.
+
+\subsection{Candidate Scoring and Classification Objective}
+\label{sec:method:classification-objective}
+
+After \(L=6\) row-graph layers, the final seed representation is
+\(\mathbf h_{g,r_g^\star}^{(L)}\in\RR^d\), and the final representation of
+candidate \(k\in\{0,1\}\) is
+\(\mathbf h_{g,k}^{\mathrm{cand},(L)}\in\RR^d\). For each candidate, the
+readout input concatenates the query context with the output hypothesis:
+\begin{equation}
+  \boldsymbol\xi_{g,k}^{\mathrm{ro}}
+  =
+  [
+    \mathbf h_{g,r_g^\star}^{(L)}
+    \vcat
+    \mathbf h_{g,k}^{\mathrm{cand},(L)}
+  ]
+  \in\RR^{2d}.
+\label{eq:method:readout-input}
+\end{equation}
+A two-layer MLP first produces the hidden readout representation
+\begin{equation}
+  \boldsymbol\psi_{g,k}^{\mathrm{ro}}
+  =
+  \relu\!\left(
+    \mathbf W_{\mathrm{ro},1}
+    \boldsymbol\xi_{g,k}^{\mathrm{ro}}
+    +\mathbf b_{\mathrm{ro},1}
+  \right)
+  \in\RR^d,
+\label{eq:method:readout-hidden}
+\end{equation}
+and then a scalar candidate score
+\begin{equation}
+  s_{g,k}
+  =
+  \mathbf w_{\mathrm{ro},2}^{\top}
+  \boldsymbol\psi_{g,k}^{\mathrm{ro}}
+  +b_{\mathrm{ro},2}
+  \in\RR.
+\label{eq:method:candidate-score}
+\end{equation}
+The readout parameters have domains
+\begin{equation}
+  \mathbf W_{\mathrm{ro},1}\in\RR^{d\times2d},
+  \qquad
+  \mathbf b_{\mathrm{ro},1}\in\RR^d,
+  \qquad
+  \mathbf w_{\mathrm{ro},2}\in\RR^d,
+  \qquad
+  b_{\mathrm{ro},2}\in\RR.
+\label{eq:method:readout-parameter-domains}
+\end{equation}
+Exactly the same MLP parameters score False and True candidates for every
+task and query; the model has no task-specific prediction head. Thus,
+\(s_{g,k}\) is a raw seed--candidate compatibility score rather than a
+probability.
+
+For binary classification, define the single logit as the difference
+between the True and False scores:
+\begin{equation}
+  \Delta_g
+  =
+  s_{g,1}-s_{g,0}
+  \in\RR.
+\label{eq:method:classification-logit}
+\end{equation}
+The probability assigned to the True class is
+\begin{equation}
+  \pi_g
+  =
+  \operatorname{sigmoid}(\Delta_g)
+  =
+  \frac{\exp(s_{g,1})}{\exp(s_{g,0})+\exp(s_{g,1})}
+  =
+  \Pr(y_g=1\mid\mathcal X_g),
+\label{eq:method:classification-probability}
+\end{equation}
+where \(\mathcal X_g\) denotes the complete constructed input for query
+\(g\), including the row graph and, for the relation-conditioned variant,
+its FK conditions. The False probability is \(1-\pi_g\). The corresponding
+hard prediction selects the higher-scoring candidate:
+\begin{equation}
+  \widehat y_g
+  =
+  \underset{k\in\{0,1\}}{\arg\max}\;s_{g,k}.
+\label{eq:method:classification-prediction}
+\end{equation}
+Therefore, \(s_{g,1}>s_{g,0}\) predicts True, whereas
+\(s_{g,0}>s_{g,1}\) predicts False. Ranking-based evaluation can operate
+directly on \(\Delta_g\) without first thresholding it.
+
+The per-query binary cross-entropy is
+\begin{equation}
+  \mathcal L_g^{\mathrm{clf}}
+  =
+  -y_g\log\pi_g
+  -(1-y_g)\log(1-\pi_g).
+\label{eq:method:classification-loss}
+\end{equation}
+The implementation evaluates this expression with a numerically stable
+BCE-with-logits routine applied directly to \(\Delta_g\). Let \(\mathcal B\)
+be the set of valid binary query graphs in a classification-only minibatch,
+and define \(G=|\mathcal B|\). Their mean loss is
+\begin{equation}
+  \mathcal L_{\mathcal B}^{\mathrm{clf}}
+  =
+  \frac{1}{G}
+  \sum_{g\in\mathcal B}\mathcal L_g^{\mathrm{clf}}.
+\label{eq:method:classification-batch-loss}
+\end{equation}
+Every valid query graph has equal weight, irrespective of its number of
+sampled cells, row nodes, or edges. Because the scalar output bias is shared
+between candidates, it cancels in the classification logit:
+\(b_{\mathrm{ro},2}-b_{\mathrm{ro},2}=0\). It is retained in the score
+definition to match the shared readout implementation and to support the
+future multi-candidate regression extension.
+
+\subsection{Extension to Regression}
+\label{sec:method:regression-placeholder}
+
+\emph{Placeholder. This subsection will define continuous candidate
+construction, observed-label-to-candidate edges, the regression objective,
+continuous inference, and the mixed classification--regression minibatch
+loss after the regression design is finalized.}

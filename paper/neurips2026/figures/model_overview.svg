@@ -1,0 +1,309 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="720" viewBox="0 0 1800 720">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#17223B" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#697386"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3568A8"/>
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#198C82"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7257A8"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B8C6E"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#DB7C26"/>
+    </marker>
+    <style>
+      .title { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 26px; font-weight: 700; fill: #162238; }
+      .subtitle { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 21px; font-weight: 600; fill: #35445F; }
+      .label { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 20px; fill: #35445F; }
+      .small { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 17px; fill: #536176; }
+      .tiny { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 15px; fill: #536176; }
+      .math { font-family: 'DejaVu Serif', 'Times New Roman', serif; font-size: 21px; font-style: italic; fill: #24334E; }
+      .panel-sep { stroke: #D9DFE8; stroke-width: 2; stroke-dasharray: 5 9; }
+      .stage { fill: #263A5B; }
+      .table-outline { fill: #FFFFFF; stroke: #6C7B91; stroke-width: 2.2; }
+      .table-header { fill: #E9EEF6; }
+      .cell { fill: #F7F9FC; stroke: #D9DFE8; stroke-width: 1.4; }
+      .row-node { fill: #FFFFFF; stroke: #3568A8; stroke-width: 4; }
+      .seed-node { fill: #FFF7E3; stroke: #DB7C26; stroke-width: 5; }
+      .rel-node { fill: #FFFFFF; stroke: #7257A8; stroke-width: 3; }
+      .candidate-false { fill: #F3EFF8; stroke: #7257A8; stroke-width: 4; }
+      .candidate-true { fill: #F3EFF8; stroke: #7257A8; stroke-width: 4; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1800" height="720" fill="#FFFFFF"/>
+  <line x1="350" y1="88" x2="350" y2="670" class="panel-sep"/>
+  <line x1="635" y1="88" x2="635" y2="670" class="panel-sep"/>
+  <line x1="1385" y1="88" x2="1385" y2="670" class="panel-sep"/>
+
+  <!-- Stage headings -->
+  <text x="24" y="51" class="title"><tspan font-weight="800">(a)</tspan><tspan dx="10">Context sampling</tspan></text>
+  <text x="378" y="51" class="title"><tspan font-weight="800">(b)</tspan><tspan dx="10">Node states</tspan></text>
+  <text x="662" y="51" class="title"><tspan font-weight="800">(c)</tspan><tspan dx="10">Relation-conditioned propagation</tspan></text>
+  <text x="1400" y="51" class="title"><tspan font-weight="800">(d)</tspan><tspan dx="10">Candidate readout</tspan></text>
+
+  <!-- 1. sampled relational context -->
+  <path d="M24,118 C80,82 285,86 330,135 L330,560 C280,606 80,600 25,554 Z"
+        fill="#F4F7FB" stroke="#9CB2CE" stroke-width="2.5" stroke-dasharray="9 8"/>
+  <rect x="38" y="96" width="270" height="34" rx="17" fill="#E5EDF8"/>
+  <text x="173" y="119" text-anchor="middle" class="small" font-weight="700">sampled FK neighborhood</text>
+
+  <!-- Users table -->
+  <g filter="url(#shadow)">
+    <rect x="42" y="164" width="124" height="132" rx="7" class="table-outline"/>
+    <path d="M49,164 H159 A7,7 0 0 1 166,171 V198 H42 V171 A7,7 0 0 1 49,164 Z" class="table-header"/>
+    <text x="104" y="188" text-anchor="middle" class="subtitle">Users</text>
+    <rect x="53" y="211" width="43" height="27" rx="4" class="cell"/>
+    <rect x="101" y="211" width="53" height="27" rx="4" class="cell"/>
+    <rect x="53" y="246" width="43" height="27" rx="4" class="cell"/>
+    <rect x="101" y="246" width="53" height="27" rx="4" class="cell"/>
+    <text x="75" y="231" text-anchor="middle" class="tiny">u₁</text>
+    <text x="127" y="231" text-anchor="middle" class="tiny">...</text>
+    <text x="75" y="266" text-anchor="middle" class="tiny">u₂</text>
+    <text x="127" y="266" text-anchor="middle" class="tiny">...</text>
+  </g>
+
+  <!-- Orders / seed table -->
+  <g filter="url(#shadow)">
+    <rect x="193" y="139" width="132" height="183" rx="7" class="table-outline"/>
+    <path d="M200,139 H318 A7,7 0 0 1 325,146 V173 H193 V146 A7,7 0 0 1 200,139 Z" fill="#FCEBCB"/>
+    <text x="259" y="163" text-anchor="middle" class="subtitle">Orders</text>
+    <rect x="204" y="187" width="34" height="29" rx="4" class="cell"/>
+    <rect x="243" y="187" width="34" height="29" rx="4" class="cell"/>
+    <rect x="282" y="187" width="32" height="29" rx="4" class="cell"/>
+    <rect x="201" y="224" width="116" height="36" rx="5" fill="#FFF7E3" stroke="#DB7C26" stroke-width="2.5"/>
+    <rect x="207" y="228" width="31" height="28" rx="4" class="cell"/>
+    <rect x="243" y="228" width="31" height="28" rx="4" class="cell"/>
+    <rect x="279" y="228" width="31" height="28" rx="4" fill="#FFF0EC" stroke="#C95E45" stroke-width="2.4"/>
+    <rect x="204" y="270" width="34" height="29" rx="4" class="cell"/>
+    <rect x="243" y="270" width="34" height="29" rx="4" class="cell"/>
+    <rect x="282" y="270" width="32" height="29" rx="4" class="cell"/>
+    <text x="294" y="250" text-anchor="middle" font-family="Georgia" font-size="24" font-weight="700" fill="#B94A3A">?</text>
+    <text x="177" y="249" text-anchor="middle" font-family="Arial" font-size="25" fill="#DB7C26">★</text>
+    <text x="260" y="347" text-anchor="middle" class="math">seed row r*</text>
+    <text x="260" y="371" text-anchor="middle" class="small" fill="#B94A3A">masked target</text>
+  </g>
+
+  <!-- Items table -->
+  <g filter="url(#shadow)">
+    <rect x="57" y="407" width="128" height="122" rx="7" class="table-outline"/>
+    <path d="M64,407 H178 A7,7 0 0 1 185,414 V441 H57 V414 A7,7 0 0 1 64,407 Z" class="table-header"/>
+    <text x="121" y="431" text-anchor="middle" class="subtitle">Items</text>
+    <rect x="69" y="455" width="44" height="27" rx="4" class="cell"/>
+    <rect x="119" y="455" width="53" height="27" rx="4" class="cell"/>
+    <rect x="69" y="489" width="44" height="27" rx="4" class="cell"/>
+    <rect x="119" y="489" width="53" height="27" rx="4" class="cell"/>
+  </g>
+
+  <!-- Events table -->
+  <g filter="url(#shadow)">
+    <rect x="217" y="420" width="106" height="107" rx="7" class="table-outline"/>
+    <path d="M224,420 H316 A7,7 0 0 1 323,427 V453 H217 V427 A7,7 0 0 1 224,420 Z" class="table-header"/>
+    <text x="270" y="444" text-anchor="middle" class="subtitle">Events</text>
+    <rect x="230" y="467" width="36" height="26" rx="4" class="cell"/>
+    <rect x="272" y="467" width="38" height="26" rx="4" class="cell"/>
+  </g>
+
+  <path d="M193,201 C179,201 178,218 166,218" fill="none" stroke="#3568A8" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <path d="M192,279 C154,310 140,355 130,405" fill="none" stroke="#198C82" stroke-width="3" marker-end="url(#arrow-teal)"/>
+  <path d="M269,322 C270,352 270,382 270,419" fill="none" stroke="#3568A8" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <rect x="43" y="565" width="286" height="42" rx="21" fill="#263A5B"/>
+  <text x="186" y="592" text-anchor="middle" font-family="DejaVu Sans" font-size="18" font-weight="700" fill="#FFFFFF">hybrid sampling · ≤ 2048 cells</text>
+
+  <!-- 2. initialization -->
+  <text x="492" y="107" text-anchor="middle" class="subtitle">heterogeneous cells</text>
+  <g>
+    <rect x="384" y="133" width="56" height="42" rx="8" fill="#E7EFFA" stroke="#7596C2" stroke-width="2"/>
+    <rect x="446" y="133" width="56" height="42" rx="8" fill="#F1EAF8" stroke="#9278B7" stroke-width="2"/>
+    <rect x="508" y="133" width="56" height="42" rx="8" fill="#E7F5F1" stroke="#55A494" stroke-width="2"/>
+    <rect x="570" y="133" width="46" height="42" rx="8" fill="#FFF4DD" stroke="#DFA34D" stroke-width="2"/>
+    <text x="412" y="161" text-anchor="middle" class="tiny">num</text>
+    <text x="474" y="161" text-anchor="middle" class="tiny">text</text>
+    <text x="536" y="161" text-anchor="middle" class="tiny">time</text>
+    <text x="593" y="161" text-anchor="middle" class="tiny">bool</text>
+  </g>
+  <path d="M410,177 C420,214 435,228 458,239" fill="none" stroke="#8C98A9" stroke-width="2.4" marker-end="url(#arrow-gray)"/>
+  <path d="M474,177 C474,206 472,220 468,238" fill="none" stroke="#8C98A9" stroke-width="2.4" marker-end="url(#arrow-gray)"/>
+  <path d="M537,177 C525,211 510,226 493,239" fill="none" stroke="#8C98A9" stroke-width="2.4" marker-end="url(#arrow-gray)"/>
+  <circle cx="461" cy="270" r="33" fill="#FFFFFF" stroke="#7596C2" stroke-width="3"/>
+  <circle cx="535" cy="270" r="33" fill="#FFFFFF" stroke="#7596C2" stroke-width="3"/>
+  <text x="461" y="278" text-anchor="middle" class="math">mean</text>
+  <text x="535" y="278" text-anchor="middle" class="math">max</text>
+  <path d="M486,294 C497,310 503,315 512,324" fill="none" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <path d="M525,301 C522,311 520,316 517,324" fill="none" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <rect x="458" y="326" width="116" height="43" rx="21" fill="#E9EEF6" stroke="#6C7B91" stroke-width="2"/>
+  <text x="516" y="354" text-anchor="middle" class="small" font-weight="700">Linear(mean || max)</text>
+  <path d="M516,370 L516,405" fill="none" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <circle cx="516" cy="448" r="39" class="row-node"/>
+  <text x="516" y="456" text-anchor="middle" class="math">h_r^(0)</text>
+
+  <!-- Time and seed additions -->
+  <path d="M390,402 C402,382 414,422 426,402 C438,382 450,422 462,402" fill="none" stroke="#7257A8" stroke-width="3"/>
+  <text x="426" y="382" text-anchor="middle" class="small">Δt</text>
+  <path d="M463,402 C477,411 485,420 492,428" fill="none" stroke="#7257A8" stroke-width="2.5" marker-end="url(#arrow-purple)"/>
+  <text x="583" y="389" text-anchor="middle" font-family="DejaVu Sans" font-size="28" fill="#DB7C26">★</text>
+  <text x="583" y="413" text-anchor="middle" class="small">seed marker</text>
+  <path d="M566,416 L552,434" stroke="#DB7C26" stroke-width="2.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Candidate initialization -->
+  <text x="500" y="532" text-anchor="middle" class="subtitle">shared Boolean encoder</text>
+  <circle cx="435" cy="565" r="19" fill="#FFFFFF" stroke="#7A879A" stroke-width="2"/>
+  <circle cx="565" cy="565" r="19" fill="#FFFFFF" stroke="#7A879A" stroke-width="2"/>
+  <text x="435" y="572" text-anchor="middle" class="math">0</text>
+  <text x="565" y="572" text-anchor="middle" class="math">1</text>
+  <path d="M435,585 L435,602" stroke="#697386" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+  <path d="M565,585 L565,602" stroke="#697386" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+  <polygon points="435,601 465,628 435,655 405,628" class="candidate-false"/>
+  <polygon points="565,601 595,628 565,655 535,628" class="candidate-true"/>
+  <text x="435" y="635" text-anchor="middle" class="math">c0</text>
+  <text x="565" y="635" text-anchor="middle" class="math">c1</text>
+  <text x="435" y="684" text-anchor="middle" class="small">False</text>
+  <text x="565" y="684" text-anchor="middle" class="small">True</text>
+
+  <!-- 3. coupled graphs -->
+  <rect x="664" y="91" width="690" height="220" rx="24" fill="#F6F2FA" stroke="#C8B9DB" stroke-width="2"/>
+  <text x="690" y="124" class="subtitle" fill="#62468E">relation graph G_rel</text>
+  <rect x="1230" y="103" width="98" height="34" rx="17" fill="#7257A8"/>
+  <text x="1279" y="126" text-anchor="middle" font-family="Arial" font-size="19" font-weight="700" fill="#FFFFFF">P = 2</text>
+
+  <path d="M824,185 C880,126 948,128 987,163" fill="none" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-purple)"/>
+  <path d="M1033,177 C1080,174 1120,185 1153,205" fill="none" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-purple)"/>
+  <path d="M1150,242 C1065,276 918,269 823,223" fill="none" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-purple)"/>
+  <text x="902" y="143" text-anchor="middle" class="tiny" fill="#62468E">h2h</text>
+  <text x="1090" y="174" text-anchor="middle" class="tiny" fill="#62468E">h2t</text>
+  <text x="985" y="277" text-anchor="middle" class="tiny" fill="#62468E">t2h</text>
+
+  <g filter="url(#shadow)">
+    <rect x="700" y="169" width="144" height="64" rx="18" class="rel-node"/>
+    <rect x="690" y="159" width="164" height="84" rx="23" fill="none" stroke="#DB7C26" stroke-width="3"/>
+    <text x="772" y="195" text-anchor="middle" class="small" font-weight="700">Orders → Users</text>
+    <text x="772" y="220" text-anchor="middle" class="math">rho_q</text>
+    <circle cx="709" cy="178" r="8" fill="#DB7C26"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="955" y="143" width="150" height="64" rx="18" class="rel-node"/>
+    <text x="1030" y="170" text-anchor="middle" class="small" font-weight="700">Orders → Items</text>
+    <text x="1030" y="195" text-anchor="middle" class="math">rho_2</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1142" y="202" width="150" height="64" rx="18" class="rel-node"/>
+    <text x="1217" y="229" text-anchor="middle" class="small" font-weight="700">Events → Users</text>
+    <text x="1217" y="254" text-anchor="middle" class="math">rho_3</text>
+  </g>
+  <!-- Conditions land on FK edges, not on row nodes -->
+  <path d="M772,244 C780,302 820,365 850,409" fill="none" stroke="#DB7C26" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#arrow-orange)"/>
+  <path d="M1030,208 C1032,278 1044,350 1061,409" fill="none" stroke="#DB7C26" stroke-width="3" stroke-dasharray="7 6" marker-end="url(#arrow-orange)"/>
+  <rect x="897" y="286" width="226" height="42" rx="21" fill="#FFF4E8" stroke="#DB7C26" stroke-width="2"/>
+  <text x="1010" y="313" text-anchor="middle" class="small" font-weight="700" fill="#A65A18">delta_e = Linear(z_rho)</text>
+
+  <!-- Main row graph -->
+  <rect x="664" y="337" width="690" height="294" rx="24" fill="#F2F6FB" stroke="#AFC1D8" stroke-width="2"/>
+  <text x="690" y="373" class="subtitle" fill="#2E5F9E">candidate-augmented row graph G_main</text>
+  <rect x="1230" y="350" width="98" height="34" rx="17" fill="#3568A8"/>
+  <text x="1279" y="373" text-anchor="middle" font-family="Arial" font-size="19" font-weight="700" fill="#FFFFFF">L = 6</text>
+
+  <!-- FK graph edges -->
+  <path d="M784,468 C835,423 879,414 930,430" fill="none" stroke="#3568A8" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <path d="M928,452 C869,463 832,477 789,493" fill="none" stroke="#198C82" stroke-width="3.2" marker-end="url(#arrow-teal)"/>
+  <path d="M784,507 C842,555 884,565 934,550" fill="none" stroke="#3568A8" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <path d="M932,528 C873,518 833,511 791,497" fill="none" stroke="#198C82" stroke-width="3.2" marker-end="url(#arrow-teal)"/>
+  <path d="M984,439 C1044,419 1086,422 1132,448" fill="none" stroke="#3568A8" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <path d="M1130,474 C1070,479 1034,470 983,456" fill="none" stroke="#198C82" stroke-width="3.2" marker-end="url(#arrow-teal)"/>
+
+  <!-- condition badges on FK edges -->
+  <rect x="836" y="407" width="54" height="31" rx="15" fill="#FFF4E8" stroke="#DB7C26" stroke-width="2"/>
+  <text x="863" y="429" text-anchor="middle" class="math" fill="#A65A18">delta1</text>
+  <rect x="850" y="546" width="54" height="31" rx="15" fill="#FFF4E8" stroke="#DB7C26" stroke-width="2"/>
+  <text x="877" y="568" text-anchor="middle" class="math" fill="#A65A18">delta2</text>
+  <rect x="1042" y="408" width="54" height="31" rx="15" fill="#FFF4E8" stroke="#DB7C26" stroke-width="2"/>
+  <text x="1069" y="430" text-anchor="middle" class="math" fill="#A65A18">delta3</text>
+
+  <!-- row nodes -->
+  <g filter="url(#shadow)">
+    <circle cx="752" cy="488" r="42" class="seed-node"/>
+    <text x="752" y="495" text-anchor="middle" class="math">r*</text>
+    <text x="752" y="546" text-anchor="middle" class="small" fill="#B5671E">seed</text>
+  </g>
+  <g filter="url(#shadow)">
+    <circle cx="956" cy="441" r="35" class="row-node"/>
+    <text x="956" y="449" text-anchor="middle" class="math">r₁</text>
+    <circle cx="958" cy="543" r="35" class="row-node"/>
+    <text x="958" y="551" text-anchor="middle" class="math">r₂</text>
+    <circle cx="1160" cy="461" r="35" class="row-node"/>
+    <text x="1160" y="469" text-anchor="middle" class="math">r₃</text>
+  </g>
+  <rect x="1121" y="505" width="78" height="31" rx="15" fill="#E7F5F1" stroke="#3B8C6E" stroke-width="2"/>
+  <text x="1160" y="527" text-anchor="middle" class="tiny" fill="#2E735A">y = 1</text>
+
+  <!-- candidate nodes and label edge -->
+  <polygon points="1283,410 1319,446 1283,482 1247,446" class="candidate-false"/>
+  <polygon points="1283,505 1319,541 1283,577 1247,541" class="candidate-true"/>
+  <text x="1283" y="454" text-anchor="middle" class="math">c0</text>
+  <text x="1283" y="549" text-anchor="middle" class="math">c1</text>
+  <text x="1325" y="452" class="tiny" fill="#62468E">False</text>
+  <text x="1325" y="547" class="tiny" fill="#62468E">True</text>
+  <path d="M1188,486 C1212,508 1229,527 1248,537" fill="none" stroke="#3B8C6E" stroke-width="4" stroke-dasharray="9 7" marker-end="url(#arrow-green)"/>
+  <text x="1224" y="515" class="tiny" fill="#2E735A">label</text>
+
+  <!-- Graph legend/base note -->
+  <line x1="694" y1="603" x2="742" y2="603" stroke="#3568A8" stroke-width="4" marker-end="url(#arrow-blue)"/>
+  <text x="754" y="610" class="tiny">f2p / p2f</text>
+  <line x1="884" y1="603" x2="932" y2="603" stroke="#3B8C6E" stroke-width="4" stroke-dasharray="8 6" marker-end="url(#arrow-green)"/>
+  <text x="944" y="610" class="tiny">observed label</text>
+  <line x1="1091" y1="603" x2="1139" y2="603" stroke="#DB7C26" stroke-width="3" stroke-dasharray="7 5" marker-end="url(#arrow-orange)"/>
+  <text x="1151" y="610" class="tiny">FK condition</text>
+
+  <!-- 4. readout -->
+  <text x="1588" y="108" text-anchor="middle" class="subtitle">final node states</text>
+  <circle cx="1460" cy="258" r="34" class="seed-node"/>
+  <text x="1460" y="266" text-anchor="middle" class="math">h*</text>
+  <polygon points="1460,350 1495,385 1460,420 1425,385" class="candidate-false"/>
+  <polygon points="1460,477 1495,512 1460,547 1425,512" class="candidate-true"/>
+  <text x="1460" y="393" text-anchor="middle" class="math">h0</text>
+  <text x="1460" y="520" text-anchor="middle" class="math">h1</text>
+
+  <!-- concat junctions -->
+  <path d="M1494,258 C1522,267 1538,290 1550,323" fill="none" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <path d="M1495,385 C1518,375 1537,356 1550,337" fill="none" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <path d="M1494,258 C1540,318 1542,431 1550,452" fill="none" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <path d="M1495,512 C1518,500 1536,479 1550,464" fill="none" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <circle cx="1560" cy="331" r="22" fill="#FFFFFF" stroke="#7A879A" stroke-width="2.5"/>
+  <circle cx="1560" cy="458" r="22" fill="#FFFFFF" stroke="#7A879A" stroke-width="2.5"/>
+  <text x="1560" y="338" text-anchor="middle" class="math">||</text>
+  <text x="1560" y="465" text-anchor="middle" class="math">||</text>
+
+  <!-- shared scorer -->
+  <rect x="1605" y="286" width="108" height="219" rx="25" fill="#EEF0F7" stroke="#596B8A" stroke-width="3" filter="url(#shadow)"/>
+  <line x1="1605" y1="396" x2="1713" y2="396" stroke="#B6BFCE" stroke-width="2"/>
+  <text x="1659" y="274" text-anchor="middle" class="small" font-weight="700">one shared scorer</text>
+  <text x="1659" y="339" text-anchor="middle" class="subtitle">MLP</text>
+  <text x="1659" y="466" text-anchor="middle" class="subtitle">MLP</text>
+  <path d="M1582,331 L1601,331" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <path d="M1582,458 L1601,458" stroke="#697386" stroke-width="3" marker-end="url(#arrow-gray)"/>
+
+  <!-- scores -->
+  <path d="M1714,340 L1742,340" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <path d="M1714,467 L1742,467" stroke="#7257A8" stroke-width="3" marker-end="url(#arrow-gray)"/>
+  <text x="1760" y="348" text-anchor="middle" class="math" fill="#62468E">s₀</text>
+  <text x="1760" y="475" text-anchor="middle" class="math" fill="#62468E">s₁</text>
+  <path d="M1773,340 H1784 V467 H1773 M1784,467 V570" fill="none" stroke="#697386" stroke-width="2.5" marker-end="url(#arrow-gray)"/>
+  <rect x="1450" y="584" width="296" height="61" rx="30" fill="#263A5B"/>
+  <text x="1598" y="611" text-anchor="middle" font-family="DejaVu Serif" font-size="23" font-style="italic" fill="#FFFFFF">logit = s₁ − s₀</text>
+  <text x="1598" y="636" text-anchor="middle" font-family="DejaVu Sans" font-size="19" font-weight="700" fill="#FFFFFF">p(y = 1) = sigmoid(logit)</text>
+
+  <!-- Global footer note -->
+  <rect x="716" y="650" width="210" height="43" rx="21" fill="#FFFFFF" stroke="#C7CFDC" stroke-width="2"/>
+  <text x="821" y="678" text-anchor="middle" class="small"><tspan font-weight="700">Base:</tspan><tspan> delta_e = 0</tspan></text>
+  <rect x="946" y="650" width="380" height="43" rx="21" fill="#F6F2FA" stroke="#C8B9DB" stroke-width="2"/>
+  <text x="1136" y="678" text-anchor="middle" class="small" fill="#62468E"><tspan font-weight="700">RelGraph:</tspan><tspan> condition reused for all 6 layers</tspan></text>
+</svg>
