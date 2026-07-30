@@ -1,17 +1,17 @@
-# results/ — 正式版结果
+# results/ — production results
 
-`rowgraph/train.py` 默认写到这里（`--out-dir` 可覆盖）。
+`rowgraph/train.py` writes here by default (`--out-dir` overrides).
 
 ```
 results/rowgraph_{variant}/{db}/{task}/{YYYYmmdd-HHMMSS}/
-    config.json      完整配置（含 git commit、参数量、码本状态）
-    evals.jsonl      每个 eval 点的 normal + noself（可画依赖度曲线）
-    best.pt          按 val_normal+val_noself 选出的最佳权重
-    final_full.json  最佳权重在全量 val/test 上的双协议结果
-    slurm.out        该次运行的 SLURM 日志副本（如果在集群跑）
-    rowgraph_{tag}.json  同目录扁平汇总（兼容老脚本）
+    config.json      full config (incl. git commit, parameter count, codebook state)
+    evals.jsonl      normal + noself at every eval point (for the dependence curve)
+    best.pt          best weights selected by val_normal+val_noself
+    final_full.json  dual-protocol result of the best weights on the full val/test
+    slurm.out         a copy of that run's SLURM log (if run on the cluster)
+    rowgraph_{tag}.json  flat summary in the same dir (legacy-script compatibility)
 ```
 
-实验/探索性的运行写在 `experiments/results/`；
-早期归档在 `experiments/results-step1-exp1&exp2 early test/`。
-汇总脚本（如 `experiments/exp2_rowgraph/final_table.py`）会同时搜索这几处。
+Experimental/exploratory runs go under `experiments/results/`;
+early archives are in `experiments/results-step1-exp1&exp2 early test/`.
+Aggregation scripts (e.g. `experiments/exp2_rowgraph/final_table.py`) search all of these.

@@ -29,11 +29,12 @@ template's font sizes and margins.
   with the agreed subsection and subsubsection hierarchy.
 - sections/experiments.tex: detailed ten-task classification setup and
   results, including the qualified leave-database-out zero-shot protocol,
-  Standard and no-self-label evaluation, RT comparison, parameter analysis,
-  relation-conditioning ablation, and current limitations.
+  published Entity Mean/Griffin/RT Standard comparison, paired RT
+  no-self-label stress test, parameter analysis, relation-conditioning
+  ablation, and current limitations.
 - sections/abstract.tex: explicit placeholder.
-- references.bib: current RelBench, Relational Transformer, and ULTRA
-  references; bibliography generation is enabled in main.tex.
+- references.bib: current RelBench, Relational Transformer, Griffin, and
+  ULTRA references; bibliography generation is enabled in main.tex.
 - Regression remains an explicit placeholder until its design is fixed.
 - A technical appendix is intentionally not included yet: all current model
   definitions are written once in the main Methodology to avoid duplication.
@@ -54,6 +55,9 @@ The canonical machine-readable result files are:
 
 - ../../experiments/results/classification/rgn_clf_results.csv for
   RowGraph-Base and RelGraph full-test Standard/NSL results;
+- ../../experiments/results/classification/published_standard_baselines.csv
+  for the published Entity Mean, Griffin, and RT values in the Standard
+  `No target DB in pretraining` comparison;
 - ../../experiments/results/classification/rt_clf_results.csv for the
   published RT Standard values and the separate locally reproduced RT
   Standard/NSL pairs.

@@ -4,7 +4,7 @@
 We evaluate whether the proposed row-graph models can transfer to a
 relational database that is held out from every parameter update. The
 experiments address three questions. First, can a small
-graph model achieve competitive leave-database-out classification accuracy?
+graph model match published leave-database-out zero-shot baselines?
 Second, how much of its accuracy remains when the query entity's contextual
 target values are removed from the sampled context? Third, what is gained by
 conditioning row-level messages on the auxiliary relation graph? Regression
@@ -74,16 +74,38 @@ individual query rather than a database or task.
 \subsubsection{Compared Methods}
 \label{sec:exp:methods}
 
-We compare the following three systems.
+The Standard comparison contains five systems. Entity Mean, Griffin, and
+RT use the published values from the ``No target-DB pretraining'' block of
+RT's zero-shot table~\citep{ranjan2026rt}; RowGraph-Base and RelGraph use
+our full-test evaluations. The NSL stress test is currently restricted to
+RT and our two row-graph variants because those are the systems for which
+we have checkpoint-level paired Standard and NSL evaluations.
+
+\paragraph{Entity Mean.}
+Entity Mean is the non-neural baseline with zero trainable parameters reported by
+RT~\citep{ranjan2026rt}. For each query, it predicts from the mean of past
+labels of the target entity that occur in the sampled context. Its inclusion
+measures how much Standard-test signal is available from a simple
+same-entity label heuristic without learned cross-database parameters.
+
+\paragraph{Griffin.}
+Griffin is a graph-centric relational foundation model based on
+cross-attention row encoding and relational message
+passing~\citep{wang2025griffin}. We use the 22M-parameter result in RT's
+published leave-database-out block, where Griffin receives an equivalent
+database subgraph~\citep{ranjan2026rt}. Its source-task mixture follows that
+published Griffin adaptation and need not be identical to RT's source-task
+mixture. We do not locally re-evaluate a Griffin checkpoint in the current
+study.
 
 \paragraph{Relational Transformer (RT).}
 RT~\citep{ranjan2026rt} is the external zero-shot comparator. It serializes
 cells from a sampled relational context and processes them with 12
 relational-attention blocks. We use the authors' published Standard-test
-numbers when comparing to prior work. For the paired robustness experiment,
-we evaluate the released leave-database-out checkpoints locally under both
-Standard and no-self-label sampling. These two RT result sources are kept
-separate throughout the section.
+numbers in the five-model comparison. Separately, for the paired robustness
+experiment, we evaluate the released leave-database-out checkpoints locally
+under both Standard and no-self-label sampling. These two RT result sources
+are never combined when computing a within-model drop.
 
 \paragraph{RowGraph-Base.}
 This is the base case defined in
@@ -102,7 +124,8 @@ applies the same six-layer row-graph backbone as RowGraph-Base. RelGraph is
 the proposed full model, whereas RowGraph-Base is its principal architectural
 ablation.
 
-Table~\ref{tab:exp:model-configurations} summarizes the configurations. Its
+Table~\ref{tab:exp:model-configurations} summarizes the three neural systems
+for which we report paired NSL evaluations. Its
 counts are trainable network parameters and exclude the frozen MiniLM text
 encoder used to precompute cell features. Both
 row-graph models use hidden width \(d=256\), precomputed text width
@@ -111,13 +134,16 @@ adds only the two relation-graph layers and condition projections. Thus, the
 comparison between the two proposed variants isolates relation conditioning
 while holding the sampler, cell encoder, row graph, row-graph depth, and
 readout fixed. RT also uses width 256 and text width 384, but its published
-implementation uses a 1024-cell context. Consequently, parameter count is a
-valid model-size comparison, whereas the current experiment is not a
-controlled comparison of FLOPs, memory, or latency.
+implementation uses a 1024-cell context. Consequently, the reported
+trainable-network parameter counts provide a model-size comparison, whereas
+the current experiment is not a controlled comparison of FLOPs, memory, or
+latency.
 
 \begin{table}[t]
   \centering
-  \caption{Model configurations used in the classification experiments.
+  \caption{Configurations of the three neural systems in our paired NSL
+  evaluation. Entity Mean and Griffin enter only the published Standard
+  comparison in Table~\ref{tab:exp:standard-results}.
   \(P\) denotes auxiliary relation-graph layers; \(L\)/blocks denotes
   row-message-passing layers for our models or attention blocks for RT.
   RT checkpoints are released pretrained checkpoints, so an optimization
@@ -140,9 +166,9 @@ controlled comparison of FLOPs, memory, or latency.
 \subsubsection{Leave-Database-Out Training and Zero-Shot Inference}
 \label{sec:exp:zero-shot-protocol}
 
-For a target database \(D^\star\), let \(\operatorname{db}(\kappa)\)
-return the database associated with task \(\kappa\). The source-task pool
-used for parameter updates is
+For RowGraph-Base and RelGraph, let \(D^\star\) be the target database and
+let \(\operatorname{db}(\kappa)\) return the database associated with task
+\(\kappa\). Our source-task pool used for parameter updates is
 \begin{equation}
   \mathfrak T_{\mathrm{train}}(D^\star)
   =
@@ -153,15 +179,22 @@ used for parameter updates is
   \right\}.
 \label{eq:exp:leave-db-out-set}
 \end{equation}
-No query from \(D^\star\) contributes to an optimization gradient. A
-separate randomly initialized leave-database-out run is trained for each
-reported target task, including tasks that share the same held-out
-database. The source stream is the implementation's complete set of tasks
-from the remaining databases; it contains both binary and continuous-label
-source tasks. The present section evaluates only binary target tasks. We
-state this mixed-source detail explicitly because the eventual regression
-methodology must document the continuous-label source objective before the
-paper is fully reproducible.
+No query from \(D^\star\) contributes to an optimization gradient in either
+proposed model. We train a separate randomly initialized leave-database-out
+run for each reported target task, including tasks that share the same
+held-out database. Our source stream is the implementation's complete set
+of tasks from the remaining databases; it contains both binary and
+continuous-label source tasks. The present section evaluates only binary
+target tasks. We state this mixed-source detail explicitly because the
+eventual regression methodology must document the continuous-label source
+objective before the paper is fully reproducible.
+
+The external Standard scores follow the respective training protocols in
+RT's published ``No target-DB pretraining'' block. That block excludes the
+target database from parameter pretraining, but its RT and Griffin
+adaptations need not use identical source-task mixtures. Our paired local RT
+evaluation uses released leave-database-out checkpoints; we do not retrain
+RT under Eq.~\eqref{eq:exp:leave-db-out-set}.
 
 We call this protocol \emph{leave-database-out zero-shot transfer}: after
 source training, the learned parameters are applied to test queries from
@@ -173,9 +206,9 @@ usage is analogous to inductive zero-shot graph inference, where a fixed
 model is evaluated on an unseen graph while that graph's structure remains
 available as input~\citep{galkin2024ultra}.
 
-There is one important qualification. Target-task validation labels are
-used to select a checkpoint, although they are never used to update model
-parameters. Our precise protocol is therefore
+There is one important qualification for our two proposed models.
+Target-task validation labels are used to select a checkpoint, although
+they are never used to update model parameters. Our precise protocol is therefore
 \emph{leave-database-out training with target-validation checkpoint
 selection}, followed by zero-shot test inference. It is stronger than
 target-database fine-tuning because the target database contributes no
@@ -183,13 +216,27 @@ gradient, but weaker than a source-only selection protocol in which no
 target label is consulted before test. We report this distinction rather
 than describing the target database as unseen in every possible sense.
 
+The Standard comparison is therefore \emph{benchmark-aligned}, rather than
+an assertion that every implementation receives an identical serialized
+input. All five systems are evaluated on the same ten tasks, test splits,
+AUROC metric, and no-target-database-pretraining regime. Within RT's
+published table, Entity Mean, Griffin, and RT use equivalent database
+subgraphs~\citep{ranjan2026rt}. Our models instead use the query-graph
+construction in Section~\ref{sec:method}, including a 2048-cell rather than
+1024-cell budget, and use the target-validation selection rule specified
+below. We retain these differences explicitly when interpreting the table.
+
 \subsubsection{Standard and No-Self-Label Evaluation}
 \label{sec:exp:nsl-protocol}
 
 In both evaluation regimes, the seed target cell \(n_g^\star\) is masked as
 specified in Section~\ref{sec:method:problem-overview}. The regimes differ
 only in whether the sampler may expose contextual target-column cells from
-other rows associated with the same query entity.
+other rows associated with the same query entity. The precise intervention
+below governs our local paired evaluation of RT, RowGraph-Base, and RelGraph.
+The published Entity Mean, Griffin, and RT values in the Standard table
+remain the ordinary results reported by RT and are not retroactively mixed
+with this local stress test.
 
 To define this precisely, let \(\mathcal C^{\mathrm{DB}}\) denote the set of
 database cells and let \(\mathcal P(r)\) be the set of database rows
@@ -225,8 +272,9 @@ other features of those rows, target-column cells associated with different
 entities, or explicitly delete FK edges. The final sampled graph can still
 change when replacement cells enter the fixed budget. It therefore measures
 dependence on one specific shortcut---the query entity's contextual target
-values---rather than removing all observed labels or all relational signal. Standard and
-NSL always evaluate the same model checkpoint on the same test queries.
+values---rather than removing all observed labels or all relational signal.
+Standard and NSL always evaluate the same model checkpoint on the same test
+queries.
 
 The deletion occurs inside serialization under a fixed cell budget. A
 skipped self-label cell can therefore free a position for a later context
@@ -246,10 +294,11 @@ and a linear OneCycle schedule with warm-up fraction \(0.2\). The sampler
 uses a 2048-cell budget, reverse-FK width \(B_{\max}=256\), and no
 train-time self-label dropout. Text cells use fixed 384-dimensional features
 precomputed by \texttt{all-MiniLM-L12-v2}; the text encoder receives no
-gradient and is not included in the parameter counts. All reported runs use
-random seed zero and no warm-start checkpoint.
+gradient and is not included in the parameter counts. All proposed-model
+runs use random seed zero and no warm-start checkpoint.
 
-At each validation event, a checkpoint is scored on both regimes. Let
+For each proposed-model run, a checkpoint is scored on both regimes at each
+validation event. Let
 \(A_{\mathrm{val},\kappa}^{\mathrm{Std}}(u)\) and
 \(A_{\mathrm{val},\kappa}^{\mathrm{NSL}}(u)\) be validation AUROC for
 target task \(\kappa\) at training step \(u\). We choose
@@ -278,8 +327,12 @@ For model \(M\) and evaluation task \(\kappa\), define the full-test scores
   =100\times\mathrm{AUROC}_{M,\kappa}^{\mathrm{NSL}}.
 \label{eq:exp:task-auroc}
 \end{equation}
-Hence, every table entry is in AUROC points. We aggregate tasks with equal
-weight, not in proportion to their test-set sizes:
+Hence, every reported performance entry is in AUROC points. In the Standard
+comparison,
+\(M\) may denote any of the five displayed methods. NSL scores and drops are
+defined only for the three locally paired systems: RT, RowGraph-Base, and
+RelGraph. We aggregate tasks with equal weight, not in proportion to their
+test-set sizes:
 \begin{align}
   \overline A_M^{\mathrm{Std}}
   & =
@@ -308,104 +361,139 @@ self-label cells in Eq.~\eqref{eq:exp:self-label-set} are unavailable. It
 must be interpreted together with the absolute NSL AUROC and does not by
 itself prove a particular reasoning mechanism.
 
-\subsection{Parameter-Efficient Leave-Database-Out Zero-Shot Classification}
+\subsection{Standard Leave-Database-Out Zero-Shot Classification}
 \label{sec:exp:standard-results}
 
-\subsubsection{Overall Standard Performance}
+\subsubsection{Comparison with Published Baselines}
 \label{sec:exp:overall-standard}
 
-Table~\ref{tab:exp:standard-results} reports Standard full-test AUROC. The
-RT column uses the values published in its zero-shot classification
-table~\citep{ranjan2026rt}; the two graph-model columns use our complete
-full-test evaluations. The latter follow the target-validation checkpoint
-selection in Eq.~\eqref{eq:exp:checkpoint-selection}; accordingly, this is
-a comparison under our declared leave-database-out protocol, not under
-source-only model selection. RelGraph reaches a macro-average of \(69.7\), equal
-to RT's published \(69.7\) after rounding to one decimal place, and improves
-over RowGraph-Base by \(2.1\) points. Before rounding, the macro averages are
-\(69.71\) for published RT, \(67.574\) for RowGraph-Base, and \(69.663\)
-for RelGraph. We therefore describe RelGraph as matching the reported RT
-macro-average at the displayed precision, not as statistically
-indistinguishable from RT.
+Table~\ref{tab:exp:standard-results} places our two row-graph variants next
+to the three relevant baselines in the ``No target-DB pretraining''
+block of RT's published classification table~\citep{ranjan2026rt}. Entity
+Mean, Griffin, and RT are copied directly from that source; we do not replace
+their Standard scores with local reproductions. RowGraph-Base and RelGraph
+are our full-test evaluations of the checkpoints selected by
+Eq.~\eqref{eq:exp:checkpoint-selection}. The comparison is aligned on the
+ten tasks, temporal test splits, AUROC metric, and exclusion of the target
+database from parameter training, subject to the input-construction and
+model-selection differences stated in
+Section~\ref{sec:exp:zero-shot-protocol}.
 
-The average conceals substantial task variation. RelGraph exceeds the
-published RT score on six of ten tasks: both Avito tasks, Driver Top-3,
-H\&M User Churn, Stack User Engagement, and Trial Study Outcome. RT remains
-stronger on both Amazon tasks, Driver DNF, and Stack User Badge.
-RowGraph-Base obtains the best score on H\&M User Churn and Trial Study
-Outcome, showing that auxiliary relation conditioning is not uniformly
-beneficial. Trial Study Outcome is also a clear failure case for all three
-systems: scores close to \(50\) indicate that none extracts strong ranking
-signal on this task.
+RelGraph obtains a macro-average of \(69.7\), matching the published RT
+macro-average of \(69.7\) at the displayed precision. The unrounded means
+are \(69.663\) for RelGraph and \(69.71\) for RT, so the result is not an
+equivalence or statistical-significance claim. RelGraph exceeds Entity Mean
+by \(3.0\) points and Griffin by \(5.7\) points at the displayed precision.
+RowGraph-Base reaches \(67.6\), which is \(0.9\) points above Entity Mean
+and \(3.6\) points above Griffin at that same precision, despite being the
+smaller of our two learned models.
+
+Task-level behavior is heterogeneous. Across the five displayed methods,
+our model family obtains the highest score on five tasks: RelGraph on both
+Avito tasks and Driver Top-3, and RowGraph-Base on H\&M User Churn and Trial
+Study Outcome. Pairwise, RelGraph exceeds published RT on six of ten tasks,
+although Entity Mean remains best on both Amazon tasks and Stack User
+Engagement. The strength of this heuristic with no trainable
+parameters---\(66.7\) macro-AUROC and three task-level wins---indicates that
+same-entity contextual
+labels are a substantial source of signal in the Standard setting. This
+observation motivates the separate NSL stress test in
+Section~\ref{sec:exp:nsl-results}. Trial Study Outcome remains a failure
+case for every displayed method, with all scores close to random ranking.
 
 \begin{table}[t]
   \centering
-  \caption{Standard-test classification performance
-  (\(100\times\mathrm{AUROC}\), higher is better). RT values are the
-  published zero-shot results; RowGraph-Base and RelGraph values are full
-  test-set evaluations of the selected checkpoints. The macro average gives
-  equal weight to each of the ten tasks. Bold marks the largest displayed
-  value in each row.}
+  \caption{Standard leave-database-out classification performance
+  (\(100\times\mathrm{AUROC}\), higher is better). Entity Mean, Griffin,
+  and RT are published values from the ``No target-DB pretraining'' block
+  in Table~1 of \citet{ranjan2026rt}; RowGraph-Base and RelGraph are our
+  full-test evaluations. The published table rounds Griffin and RT to 22M
+  parameters; the more precise RT implementation count used in
+  Eq.~\eqref{eq:exp:parameter-ratio} is 22.3M. Macro averages weight the ten
+  tasks equally. Bold marks the largest displayed AUROC in each task and
+  macro-average row.}
   \label{tab:exp:standard-results}
-  \small
-  \begin{tabular}{lrrr}
+  \footnotesize
+  \setlength{\tabcolsep}{3.5pt}
+  \begin{tabular}{lrrrrr}
     \toprule
-    Task & RT & RowGraph-Base & RelGraph \\
+    Task & Entity Mean & Griffin & RT & RowGraph-Base & RelGraph \\
     \midrule
-    Amazon / Item Churn & \textbf{70.9} & 68.4 & 66.9 \\
-    Amazon / User Churn & \textbf{64.0} & 63.1 & 63.7 \\
-    Avito / User Clicks & 59.5 & 53.8 & \textbf{61.1} \\
-    Avito / User Visits & 61.8 & 61.2 & \textbf{62.4} \\
-    F1 / Driver DNF & \textbf{81.2} & 75.3 & 79.7 \\
-    F1 / Driver Top-3 & 89.3 & 88.0 & \textbf{89.6} \\
-    H\&M / User Churn & 62.8 & \textbf{67.2} & 66.8 \\
-    Stack / User Badge & \textbf{80.1} & 75.1 & 76.8 \\
-    Stack / User Engagement & 75.7 & 70.0 & \textbf{76.3} \\
-    Trial / Study Outcome & 51.8 & \textbf{53.6} & 53.2 \\
+    Trainable parameters & 0 & 22M & 22M & 2.05M & 2.78M \\
     \midrule
-    Macro average & \textbf{69.7} & 67.6 & \textbf{69.7} \\
+    Amazon / Item Churn
+      & \textbf{73.0} & 69.0 & 70.9 & 68.4 & 66.9 \\
+    Amazon / User Churn
+      & \textbf{64.4} & 62.3 & 64.0 & 63.1 & 63.7 \\
+    Avito / User Clicks
+      & 44.7 & 45.9 & 59.5 & 53.8 & \textbf{61.1} \\
+    Avito / User Visits
+      & 60.7 & 60.7 & 61.8 & 61.2 & \textbf{62.4} \\
+    F1 / Driver DNF
+      & 75.4 & 57.7 & \textbf{81.2} & 75.3 & 79.7 \\
+    F1 / Driver Top-3
+      & 85.0 & 82.5 & 89.3 & 88.0 & \textbf{89.6} \\
+    H\&M / User Churn
+      & 64.4 & 60.2 & 62.8 & \textbf{67.2} & 66.8 \\
+    Stack / User Badge
+      & 66.2 & 73.5 & \textbf{80.1} & 75.1 & 76.8 \\
+    Stack / User Engagement
+      & \textbf{83.5} & 77.5 & 75.7 & 70.0 & 76.3 \\
+    Trial / Study Outcome
+      & 50.0 & 51.0 & 51.8 & \textbf{53.6} & 53.2 \\
+    \midrule
+    Macro average
+      & 66.7 & 64.0 & \textbf{69.7} & 67.6 & \textbf{69.7} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsubsection{Performance Relative to Model Size}
+\subsubsection{Parameter Efficiency}
 \label{sec:exp:parameter-efficiency}
 
-RelGraph contains \(2.78\)M trainable network parameters, compared with
-\(22.3\)M for RT; neither count includes the frozen text encoder used to
-precompute cell features. Its relative parameter count and reduction are
+RelGraph contains \(2.78\)M trainable network parameters. RT's precise
+implementation count is \(22.3\)M, while its published comparison displays
+both RT and Griffin as 22M-class models. Relative to RT, RelGraph's parameter
+ratio and reduction are
 \begin{equation}
   \frac{2.78}{22.3}=0.125,
   \qquad
   1-\frac{2.78}{22.3}=0.875.
 \label{eq:exp:parameter-ratio}
 \end{equation}
-Thus, RelGraph uses approximately one eighth as many parameters, an
-\(87.5\%\) reduction, while matching RT's published Standard macro-AUROC
-after rounding. RowGraph-Base is smaller still at \(2.05\)M parameters and
-trails RT by only \(2.1\) macro points. These results provide evidence that
-competitive leave-database-out transfer on this ten-task suite does not
-require a large Transformer backbone: substantial cross-database accuracy
-can be encoded by a compact row-level graph model with parameters shared
-across schemas and tasks within each leave-database-out run.
+RelGraph therefore uses approximately one eighth as many trainable
+parameters---an \(87.5\%\) reduction---while matching RT's published
+Standard macro-AUROC after rounding. It also exceeds Griffin, another
+22M-class baseline comparable in size to RT, by \(5.7\) displayed macro
+points. RowGraph-Base is smaller still at \(2.05\)M parameters and exceeds
+both published Entity Mean and Griffin in macro-average performance.
 
-This is specifically a claim about \emph{parameter efficiency}. Because RT
-and the proposed models use different context budgets and operators,
-Table~\ref{tab:exp:model-configurations} does not establish lower inference
-time, lower peak memory, or fewer floating-point operations. Those quantities
-require direct hardware-controlled measurement.
+Entity Mean has no trainable network parameters, but it is a fixed heuristic
+rather than a learned transferable model; its role is to quantify directly
+available label-history signal. Our efficiency claim therefore concerns the
+learned neural comparators. Moreover, parameter count is not a proxy for
+total system cost. RT and our models use different context budgets and
+operators, so the present results do not establish lower inference latency,
+peak memory, or floating-point operations. Those quantities require
+hardware-controlled profiling.
 
-\subsection{Robustness to Same-Entity Target Values}
+\subsection{No-Self-Label Stress Test}
 \label{sec:exp:nsl-results}
 
-\subsubsection{Aggregate Robustness}
+\subsubsection{Current Comparison with RT}
 \label{sec:exp:nsl-aggregate}
 
-Table~\ref{tab:exp:nsl-results} gives paired Standard and NSL evaluations.
-For RT, both columns in this table come from our local evaluation of the
-same released checkpoint; they are not formed by pairing a published
-Standard score with a locally reproduced NSL score. This distinction makes
-the within-model drop in Eq.~\eqref{eq:exp:self-label-drop} meaningful.
+RT is currently the only external neural baseline for which we have run the
+NSL intervention. Table~\ref{tab:exp:nsl-results} therefore gives paired
+Standard and NSL evaluations for the released RT checkpoints and our two
+row-graph variants. Entity Mean and Griffin are not assigned placeholder or
+inferred NSL values; they will be added only after direct evaluation under
+the same intervention. For RT, both columns in this table come from our
+local evaluation of the same released checkpoint. They are not formed by
+pairing the published Standard score in
+Table~\ref{tab:exp:standard-results} with a locally reproduced NSL score,
+which keeps the within-model drop in Eq.~\eqref{eq:exp:self-label-drop}
+well-defined.
 
 Under NSL, RelGraph retains a macro-average AUROC of \(62.3\), compared with
 \(52.1\) for RT, a gain of \(10.2\) points at the reported precision. Its
@@ -425,8 +513,8 @@ This result does not imply that the row-graph models never use observed
 labels, nor that the remaining prediction is purely structural. NSL keeps
 other entities' target values, every non-target feature, timestamps, and the
 sampled FK neighborhood. The supported conclusion is narrower: the average
-leave-database-out performance of the row-graph models is less dependent on the
-specific copyable self-label set in
+leave-database-out performance of the row-graph models is less dependent on
+the specific copyable self-label set in
 Eq.~\eqref{eq:exp:self-label-set}, and useful predictive signal remains in
 the rest of the relational context.
 
@@ -437,8 +525,9 @@ the rest of the relational context.
   the same test queries. RT numbers here are our local paired reproduction
   using released checkpoints; the published RT values used for prior-work
   comparison appear separately in Table~\ref{tab:exp:standard-results}.
-  Bold marks the best NSL score in each task row and the smallest aggregate
-  NSL drop.}
+  Entity Mean and Griffin have not yet been evaluated under NSL. Bold marks
+  the best NSL score among the three locally evaluated systems in each task
+  row and the smallest aggregate NSL drop.}
   \label{tab:exp:nsl-results}
   \footnotesize
   \setlength{\tabcolsep}{4pt}
@@ -509,8 +598,11 @@ itself sufficient for accurate relational prediction.
 \subsection{Ablation of Relation Conditioning}
 \label{sec:exp:relation-ablation}
 
-The difference between RowGraph-Base and RelGraph isolates the auxiliary
-relation graph and its FK condition vectors. Adding relation conditioning
+Unlike the heterogeneous published-baseline comparison, the difference
+between RowGraph-Base and RelGraph is a controlled within-family ablation:
+it isolates the auxiliary relation graph and its FK condition vectors while
+holding the remaining architecture and training protocol fixed. Adding
+relation conditioning
 increases the parameter count from \(2.05\)M to \(2.78\)M and improves
 Standard macro-AUROC from \(67.6\) to \(69.7\), a gain of \(2.1\) points.
 The gains are especially visible for Avito User Clicks
@@ -551,14 +643,25 @@ explicitly rewards both Standard and NSL validation performance. The
 reported NSL robustness is therefore partly a model-selection objective,
 not a fully post hoc property. A stricter future experiment should choose
 the checkpoint using source validation only and evaluate the target
-database exactly once.
+database exactly once. This also means that the Standard main table is a
+benchmark-aligned comparison, not a model-selection-controlled comparison
+to the published baselines.
 
 \paragraph{Initial ten-task suite.}
 The study currently covers the fixed ten-task RT comparison suite described
 in Section~\ref{sec:exp:tasks}. It does not yet include the two newer
-\texttt{rel-event} classification tasks or additional external models.
-Conclusions are limited to this declared set, and future tasks must be added
-without retroactively changing the aggregates reported here.
+\texttt{rel-event} classification tasks or external methods beyond Entity
+Mean, Griffin, and RT. Conclusions are limited to this declared set, and
+future tasks must be added without retroactively changing the aggregates
+reported here.
+
+\paragraph{Incomplete NSL baseline coverage.}
+The Standard table contains three external baselines, but the current NSL
+stress test contains only RT because Entity Mean and Griffin have not yet
+been evaluated with our intervention. NSL conclusions are therefore limited
+to the released RT checkpoint comparison. Future work will extend the same
+paired protocol to additional baselines rather than extrapolating their
+behavior from Standard results.
 
 \paragraph{Mixed source tasks.}
 The training stream contains the available classification and regression
@@ -568,10 +671,12 @@ be specified in the regression extension before the final manuscript is
 fully self-contained.
 
 \paragraph{Parameter versus system efficiency.}
-The \(87.5\%\) reduction relative to RT concerns trainable parameter count.
-Different cell budgets and operators prevent a direct claim about compute,
-latency, throughput, or memory. Those comparisons require profiling under a
-shared hardware and batching protocol.
+The \(87.5\%\) reduction relative to RT concerns trainable network
+parameters. The published Standard table rounds RT and Griffin to 22M,
+whereas our exact ratio uses RT's 22.3M implementation count. Different cell
+budgets, input construction, and operators prevent a direct claim about
+compute, latency, throughput, or memory. Those comparisons require profiling
+under a shared hardware and batching protocol.
 
 \paragraph{Scope of NSL.}
 NSL removes only the query entity's contextual target-column cells. It does
