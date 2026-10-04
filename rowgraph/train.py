@@ -3,11 +3,14 @@
 Protocol: from-scratch, leave-db-out (same task mix as RT-scratch baselines),
 so results compare directly against our matched RT-scratch numbers.
 
-Every eval reports BOTH the normal metric and the no-self-label metric
-(sampler self_label_dropout=1.0), so label reliance is tracked continuously.
+Checkpoint selection sees the Standard VALIDATION split only.  Periodic evals
+report the normal and the no-self-label validation metric (sampler
+self_label_dropout=1.0), so label reliance is tracked continuously; the test
+splits are evaluated exactly once, on the selected checkpoint, at the end.
 
 Usage:
-  pixi run python experiments/rowgraph_train.py <db> <table> <variant> [seed] [steps] [seq_len]
+  pixi run python rowgraph/train.py --db rel-f1 --task driver-dnf \
+      --variant relgraph_no_warm --seed 0
 
 variants:
   full      = mp6 + time + label_edges + warm_start
@@ -370,7 +373,11 @@ def main():
         "codebook": codebook_on,
         "lr": 1e-3, "weight_decay": 0.1, "batch_size": 32,
         "optimizer": "AdamW", "scheduler": "OneCycleLR(pct_start=0.2,linear)",
-        "selection": "val_normal + val_noself (combined, validation-only)",
+        "selection": "argmax val_normal over evals every 2048 steps, on a "
+                     "fixed 8192-example prefix of the Standard validation "
+                     "split; test splits are never seen before selection, so "
+                     "both test_normal and test_noself are unselected "
+                     "out-of-sample readouts of the selected checkpoint",
         "protocol": "from-scratch, leave-db-out (eval db unseen during training)",
         "params": sum(p.numel() for p in net.parameters()),
         "device": device, "started": started.isoformat(timespec="seconds"),
@@ -383,13 +390,20 @@ def main():
     }, indent=2))
     print(f"RUN_DIR {run_dir}", flush=True)
 
+    # Validation only during training: the test splits must not enter any
+    # selection decision, so they are evaluated once at the end (final_full).
+    # The selection set is a fixed 8,192-example prefix of the Standard
+    # validation split (f1/trial validation is smaller and is used in full);
+    # 2,048 was too noisy a criterion to take a max over ~50 evaluations.
+    SEL_BATCHES, MON_BATCHES = 256, 64
+
     def run_evals(step):
         rec = {"step": step, "tag": tag}
-        for (split, mode), ds in evals.items():
-            m, n = evaluate(net, ds, task_type, device, max_batches=64,
-                            cb_fn=cb_split[split])
-            rec[f"{split}_{mode}"] = round(m, 4)
-            rec["n_" + split] = n
+        for mode, nb in (("normal", SEL_BATCHES), ("noself", MON_BATCHES)):
+            m, n = evaluate(net, evals[("val", mode)], task_type, device,
+                            max_batches=nb, cb_fn=cb_split["val"])
+            rec[f"val_{mode}"] = round(m, 4)
+            rec["n_val" if mode == "normal" else "n_val_noself"] = n
         print("EVAL " + json.dumps(rec), flush=True)
         with open(run_dir / "evals.jsonl", "a") as fh:
             fh.write(json.dumps(rec) + "\n")
@@ -410,7 +424,7 @@ def main():
                 break
             if steps % 2048 == 0:
                 rec = run_evals(steps)
-                crit = rec["val_normal"] + rec["val_noself"]
+                crit = rec["val_normal"]
                 if crit > best_val:
                     best_val = crit
                     best_rec = rec
@@ -453,14 +467,17 @@ def main():
                 )
 
     rec = run_evals(steps)
-    if rec["val_normal"] + rec["val_noself"] > best_val:
+    if rec["val_normal"] > best_val:
+        best_val = rec["val_normal"]
         best_rec = rec
         torch.save(net.state_dict(), ckpt_dir / "best.pt")
         torch.save(net.state_dict(), run_dir / "best.pt")
     print("BEST " + json.dumps(best_rec), flush=True)
 
-    # final FULL evaluation of the best checkpoint (paper-comparable numbers)
-    net.load_state_dict(torch.load(ckpt_dir / "best.pt", map_location=device))
+    # final FULL evaluation of the best checkpoint (paper-comparable numbers).
+    # Load this run's own copy: ckpt_dir is keyed by tag only, so two jobs with
+    # the same tag (duplicate submit, smoke test) would overwrite each other.
+    net.load_state_dict(torch.load(run_dir / "best.pt", map_location=device))
     final_full = {"tag": tag}
     for (split, mode), ds in evals.items():
         m, n = evaluate(net, ds, task_type, device,  # no cap = full split
@@ -480,8 +497,8 @@ def main():
     (run_dir / "final_full.json").write_text(json.dumps(final_full, indent=2))
     jid = os.environ.get("SLURM_JOB_ID")
     if jid:  # keep this run's SLURM log next to its own results
-        # sbatch writes logs to experiments/results/ regardless of --out-dir
-        for log in (REPO / "experiments" / "results").glob(f"*_{jid}.out"):
+        # sbatch writes logs to results/logs/ regardless of --out-dir
+        for log in (REPO / "results" / "logs").glob(f"*_{jid}.out"):
             shutil.copy2(log, run_dir / "slurm.out")
     print(f"RUN_ARTIFACTS {run_dir}", flush=True)
 
