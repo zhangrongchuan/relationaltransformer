@@ -62,7 +62,3 @@ See [results/README.md](results/README.md) for existing parameter, ablation, and
 | [`rt/`](rt/), [`rustler/`](rustler/) | RT data pipeline and Rust sampler |
 | [`analysis/`](analysis/README.md) | Parameter analysis, ablations, multi-hop studies, and evaluation tools |
 | [`results/`](results/README.md) | Saved experiments and historical source snapshots |
-| [`paper/`](paper/) | Paper source and references |
-| [`archived/`](archived/README.md) | Historical experiments and tools |
-
-Detailed setup, preprocessing, training, and SLURM instructions are preserved in the [full documentation](archived/docs/README.detailed.md).
