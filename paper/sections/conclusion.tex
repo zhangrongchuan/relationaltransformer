@@ -1,0 +1,31 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Our experiments show that compact relational models can transfer across
+databases: \model{} achieves performance comparable to \RT{} with 12.5\%
+of its parameter count, and higher average accuracy at a similar model size.
+The case study in Section~\ref{sec:case_study} shows that two-hop neighborhoods
+recover most of the full-context performance, historical task labels are a
+major source of predictive information, and disabling relation conditioning
+reduces average accuracy.
+
+These findings also reveal limitations and directions for future work.
+Both \model{} and \RT{} deteriorate substantially when the query entity's
+historical task labels are hidden. Improving prediction for entities with
+little or no label history therefore remains a central challenge. Future
+work could explore training with missing label histories to encourage
+greater use of activity records and evidence from related entities.
+Our experiments show gains from increasing model size, but pretraining
+remains limited to the RelBench databases. An important direction is to
+expand the scale and diversity of pretraining data and examine whether
+these gains extend to a broader range of unseen schemas and tasks.
+Finally, our evaluation is limited to binary entity classification;
+extending the prediction mechanism and evaluating transfer on regression
+and recommendation tasks remain open directions.
+
+We introduced \model{}, combining transferable relation representations
+from RelationGraph, RowGraph reasoning, and shared class-candidate
+prediction. Together, these components provide a compact architecture for
+entity classification across unseen relational databases, while our
+analysis identifies reliance on entity label history as a key challenge
+for further progress.

@@ -3,11 +3,10 @@ __pycache__
 .pixi
 .torchinductor_cache
 *.egg-info
-/wandb
 .vscode
 /ckpts
-/experiments
 /results
-experiment.ipynb
-/paper/neurips2026_overleaf.zip
-/presentation/relgraph_overleaf_overleaf.zip
+
+/archived
+/analysis
+/paper/reference

@@ -1,0 +1,85 @@
+\documentclass{article}
+
+% Anonymous NeurIPS 2026 main-track submission.
+\usepackage{neurips_2026}
+% Camera ready: \usepackage[main,final]{neurips_2026}
+% Preprint:     \usepackage[preprint]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage{url}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+
+\newcommand{\model}{\textsc{ReGRow}}
+\newcommand{\RT}{\textsc{RT}}
+\newcommand{\fkp}{\mathsf{f2p}}
+\newcommand{\pkf}{\mathsf{p2f}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\ind}{\mathbb{I}}
+\newcommand{\concat}{\mathbin\Vert}
+\newcommand{\relu}{\operatorname{ReLU}}
+
+\newcommand{\mainAUROC}{70.0}
+\newcommand{\mainParams}{2.78M}
+\newcommand{\wideAUROC}{71.5}
+\newcommand{\wideParams}{22M}
+
+\title{ReGRow: Relation-Guided Row-Graph Transfer for Entity Classification on Unseen Relational Databases}
+
+\author{%
+  Zhang Rongchuan \\
+  Institute for Artificial Intelligence \\
+  \texttt{anonymous@example.com}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% Relational databases vary in their schemas, table identities, and PK--FK
+% relations, making it difficult for a model trained on one collection of
+% databases to generalize to an unseen database.  We present \model{}, a compact
+% graph architecture for cross-database entity classification.  
+
+% \model{} consists of three main components. A context module collects a bounded, temporally valid neighborhood around each query and aggregates heterogeneous cell values into row representations. A relation-guidance module constructs a query-conditioned graph from the local PK--FK structure and infers relation representations without learned schema-specific identifiers. A row-reasoning module uses these representations to guide message passing between rows, followed by a shared classifier for entity prediction.
+
+% --------------------------------------------------
+% Relational databases vary in their schemas, table identities, and PK-FK relations, making it difficult for a model trained on one collection of databases to generalize to an unseen database. Recent relational foundation models have demonstrated cross-database transfer, motivating us to explore compact models that preserve relation-specific computation and exploit task context for prediction. We present \model{}, a model for cross-database entity classification that combines structurally induced relation representations, compact row-level reasoning, and context-aware candidate scoring.
+% \model{} consists of three main components. A context module collects a bounded, temporally valid neighborhood around each query and uses shared encoders to aggregate heterogeneous cell values into compact row representations. A relation-guidance module constructs a query-conditioned graph from the local PK–FK structure and uses operators shared across databases to infer relation representations on unseen schemas, without learned schema-specific identifiers. A row-reasoning module uses these representations to guide message passing between rows, aggregates labeled context into class-candidate nodes, and applies a shared scorer to query–candidate pairs for entity prediction.
+% Across ten binary RelBench tasks in a leave-database-out evaluation, \model{} achieves 70.0 macro AUROC with 2.78M trainable parameters, providing competitive accuracy with substantially fewer parameters than recent neural baselines.
+% These results indicate that structure-induced relation representations offer a compact route to competitive cross-database transfer.
+
+Cross-dataset entity classification on relational databases asks a model trained on multiple databases to predict entity labels in an unseen database without updating its parameters.
+Existing models for this task rely on large attention-based architectures that learn from data which parts of the relational context matter.
+Graph neural networks are far more compact because the relational structure itself determines how they aggregate information, but they are typically trained for a single schema.
+The core challenge is to retain this efficiency without parameters specific to any database.
+We present \model{}, a lightweight graph neural network in which the database structure, rather than learned attention, determines how information is aggregated, and whose parameters are tied only to roles that all databases share, never to particular tables, relations or tasks.
+Specifically, \model{} (i) encodes records of any table with one shared encoder and passes messages along primary--foreign key links with two edge types common to all databases, so that computation scales with records rather than cells; (ii) replaces relation-specific weights with relation representations derived from a graph over foreign-key relations, in which relations sharing a table are adjacent; and (iii) replaces task-specific output heads by connecting records with known labels to one node per class and scoring the target against these nodes, with each timestamped record encoded by its time relative to the prediction.
+With only \mainParams{} parameters, \model{} achieves \mainAUROC{} macro AUROC on ten binary classification tasks from RelBench under leave-database-out transfer, and accuracy improves with width, reaching \wideAUROC{} at \wideParams{} parameters.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/related_works}
+\input{sections/task_formulation}
+\input{sections/methodology}
+\input{sections/result}
+\input{sections/conclusion}
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\clearpage
+% \input{checklist}
+
+\end{document}

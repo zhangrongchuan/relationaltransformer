@@ -1,0 +1,53 @@
+\section{Task Formulation}
+\label{sec:task}
+
+\paragraph{Relational database graph.}
+Let $\mathcal V_D$ be the finite set of rows in a database $D$ and $\mathcal R_D$ its set of foreign-key columns. We represent $D$ as an attributed graph $\mathcal G_D=(\mathcal V_D,\mathcal R_D,\mathcal E_D,\mathcal A_D)$, where $\mathcal E_D\subseteq\mathcal V_D\times\mathcal R_D\times\mathcal V_D$. An edge $(r_c,\kappa,r_p)$ means that the foreign-key column $\kappa\in\mathcal R_D$ of child row $r_c$ references parent row $r_p$.  Different foreign-key columns may connect the same rows.  Each row $r$ belongs to a table $T_r$; $\mathcal A_D$ records its named cell values, semantic types, and timestamp $t_r$ when available.
+
+\paragraph{Temporal entity classification.}
+This paper focuses on entity classification, and our baseline comparisons
+are restricted to this task type. A query $g=(r_g^\star,c_g^\star,t_g)$ specifies a query row, a target column, and a prediction time. The task is to predict the unknown binary target $y_g\in\{0,1\}$ associated with this query. The input consists of $g$ and a bounded, time-filtered context $\mathcal X_g$ sampled from $\mathcal G_D$, containing visible row attributes and PK--FK links. The label of the query row is masked (Section~\ref{sec:method:sampling}). The output is a probability $p_g$ and its corresponding class prediction:
+\begin{equation}
+ p_g=p_\theta(y_g=1\mid\mathcal X_g,g),
+ \qquad \widehat y_g=\ind[p_g\geq\tfrac12].
+ \label{eq:task}
+\end{equation}
+
+% \paragraph{Cross-database inference.}
+% Given source databases $\mathcal D_{\mathrm{src}}$ and a target database
+% $D^\star\notin\mathcal D_{\mathrm{src}}$, model parameters are optimized
+% using only source-database training examples and remain fixed at inference.
+% Representations are constructed from the target schema and query context,
+% allowing inference on rows and relation types unseen during training.
+% Following the benchmark protocol, temporally available labels in historical
+% task rows may be included in the input context, but no target-database
+% labels contribute to gradient-based parameter updates.
+% We refer to this setting as \emph{frozen leave-database-out transfer},
+% with target-validation-based checkpoint selection detailed in
+% Section~\ref{sec:setup}.
+
+
+\paragraph{Cross-database inference.}
+Given source databases $\mathcal D_{\mathrm{src}}$ and a target database
+$D^\star\notin\mathcal D_{\mathrm{src}}$, the goal is to apply a predictor
+$p_\theta$ learned on $\mathcal D_{\mathrm{src}}$ to queries in $D^\star$
+without updating $\theta$:
+\begin{equation}
+ \underbrace{p_\theta\!\left(y_g=1\mid\mathcal X_g,g\right)}
+ _{D\in\mathcal D_{\mathrm{src}}}
+ \quad\xrightarrow{\theta\ \text{fixed}}\quad
+ \underbrace{p_\theta\!\left(y_g=1\mid\mathcal X_g^\star,g\right)}
+ _{\text{inference on }D^\star},
+ \label{eq:cross_database_transfer}
+\end{equation}
+where $\mathcal X_g$ and $\mathcal X_g^\star$ denote query contexts sampled
+from $\mathcal G_D$ and $\mathcal G_{D^\star}$, respectively.
+Representations are constructed from
+the schema and query context of $D^\star$, allowing inference on rows and
+relation types unseen during training.
+Following the benchmark protocol, temporally available labels in historical
+task rows may be included in $\mathcal X_g^\star$, but labels from $D^\star$
+do not contribute to gradient-based parameter updates.
+We refer to this setting as \emph{frozen leave-database-out transfer},
+with target-validation-based checkpoint selection detailed in
+Section~\ref{sec:setup}.

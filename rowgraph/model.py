@@ -8,8 +8,8 @@ Design (agreed in discussion):
   candidate value nodes: True/False via boolean encoder, K z-space bins via
                         number encoder; context task rows send one-directional
                         has_label edges into their answer's candidate node
-  readout:              score(seed, candidate); clf = score diff,
-                        reg = expectation over softmax(bin scores)
+  readout:              clf = score(seed, True) - score(seed, False)
+  training:             mixed classification BCE and numeric two-hot loss
 
 Graphs are built on-the-fly from the standard RT cell batches (no sampler
 format change needed): cells sharing node_idx form a row.
@@ -76,13 +76,13 @@ class RowGraphNet(nn.Module):
         use_label_edges=True,
         pool="meanmax",
         use_relgraph=False,
-        local_readout=False,  # global expectation E[y|x]; local hurt 7/8 tasks (ablation)
+        use_candidates=True,  # False: no candidate nodes, MLP heads on the seed row (ablation)
     ):
         super().__init__()
         self.use_time = use_time
-        self.use_label_edges = use_label_edges
+        self.use_candidates = use_candidates
+        self.use_label_edges = use_label_edges and use_candidates
         self.pool = pool
-        self.local_readout = local_readout
         if pool == "attn":
             # learned-query attention over cells within a row: wide rows keep
             # their salient fields instead of diluting them into the mean
@@ -108,7 +108,8 @@ class RowGraphNet(nn.Module):
 
         self.row_proj = nn.Linear(2 * d_model, d_model)
         self.seed_emb = nn.Parameter(torch.zeros(d_model))
-        self.cand_emb = nn.Parameter(torch.zeros(d_model))
+        if use_candidates:
+            self.cand_emb = nn.Parameter(torch.zeros(d_model))
 
         # relative-time encoding: wavelengths 1 day .. ~100 years
         n_freq = 16
@@ -124,7 +125,8 @@ class RowGraphNet(nn.Module):
         self.register_buffer("bin_centers", centers, persistent=False)
         self.n_bins = n_bins
 
-        self.layers = nn.ModuleList([MPLayer(d_model) for _ in range(n_layers)])
+        etypes = ("f2p", "p2f", "label") if use_candidates else ("f2p", "p2f")
+        self.layers = nn.ModuleList([MPLayer(d_model, etypes) for _ in range(n_layers)])
         self.use_relgraph = use_relgraph
         if use_relgraph:
             # ULTRA-style relation graph: nodes = FK relation types
@@ -139,9 +141,19 @@ class RowGraphNet(nn.Module):
             self.rel_cond = nn.Linear(d_model, d_model)
             nn.init.zeros_(self.rel_cond.weight)
             nn.init.zeros_(self.rel_cond.bias)
-        self.readout = nn.Sequential(
-            nn.Linear(2 * d_model, d_model), nn.ReLU(), nn.Linear(d_model, 1)
-        )
+        if use_candidates:
+            self.readout = nn.Sequential(
+                nn.Linear(2 * d_model, d_model), nn.ReLU(), nn.Linear(d_model, 1)
+            )
+        else:
+            # direct heads on the seed row: one logit (clf), logits over the
+            # fixed z-space bins (reg; same two-hot objective as with candidates)
+            self.head_clf = nn.Sequential(
+                nn.Linear(d_model, d_model), nn.ReLU(), nn.Linear(d_model, 1)
+            )
+            self.head_reg = nn.Sequential(
+                nn.Linear(d_model, d_model), nn.ReLU(), nn.Linear(d_model, n_bins)
+            )
 
     # ------------------------------------------------------------------
     def encode_cells(self, batch, valid):
@@ -162,11 +174,12 @@ class RowGraphNet(nn.Module):
         return x * valid[..., None]
 
     # ------------------------------------------------------------------
-    def forward(self, batch, reg_cb=None):
-        """reg_cb: optional per-graph regression codebook (g_centers, g_len).
-        g_centers (G, Kmax) float, rows sorted, tail repeat-padded with the
-        last valid center; g_len (G,) long. Rows for clf graphs are unused
-        (any valid sorted row). None -> the fixed normal-quantile bins."""
+    def forward(self, batch):
+        """Return the original mixed-task loss and classification predictions.
+
+        Numeric targets retain their fixed-bin two-hot training objective;
+        numeric prediction readout is omitted.
+        """
         node = batch["node_idxs"].long()
         is_pad = batch["is_padding"]
         is_tgt = batch["is_targets"]
@@ -218,7 +231,22 @@ class RowGraphNet(nn.Module):
             mean = mean / cnt.clamp(min=1)[:, None]
             h_row = self.row_proj(torch.cat([attn, mean], dim=-1))
         else:
-            h_row = self.row_proj(scatter_mean_max(cell_emb, inv, R))
+            p_emb, p_inv = cell_emb, inv
+            if getattr(self, "drop_label_cells", False):  # analysis hook (graph_study.py); off by default
+                # pool context task rows without their label cell: the label then
+                # reaches the model only through the has_label edges
+                keep = ~(
+                    (batch["col_name_idxs"] == target_col[:, None])
+                    & (batch["table_name_idxs"] == seed_table[:, None])
+                    & (node != seed_node[:, None])
+                )[valid]
+                p_emb, p_inv = cell_emb[keep], inv[keep]
+            pooled = scatter_mean_max(p_emb, p_inv, R)
+            if p_inv.numel() < inv.numel():  # a row left without cells pools to zero
+                left = torch.zeros(R, dtype=torch.bool, device=dev)
+                left[p_inv] = True
+                pooled = pooled * left[:, None]
+            h_row = self.row_proj(pooled)
 
         # representative cell per row -> row-level fields
         pos = torch.arange(flat_gid.numel(), device=dev)
@@ -266,16 +294,16 @@ class RowGraphNet(nn.Module):
         if self.use_relgraph and e_src.numel() > 0:
             flat_table = batch["table_name_idxs"].long()[valid]
             row_table = flat_table[first]  # (R,)
-            PK = 2 ** 21
             e_g = row_g[e_src]  # graph of each edge
             e_ct = row_table[e_src]  # child table
             e_pt = row_table[e_dst]  # parent table
-            rel_key = (e_g * PK + e_ct) * PK + e_pt
-            rel_uniq, rel_inv = torch.unique(rel_key, return_inverse=True)
-            Nr = rel_uniq.numel()
-            r_g = rel_uniq // (PK * PK)
-            r_ct = (rel_uniq // PK) % PK
-            r_pt = rel_uniq % PK
+            # dedupe (graph, child, parent) triples directly: table ids can
+            # exceed 2**21, so packing them into one integer key overflowed
+            rel_uniq, rel_inv = torch.unique(
+                torch.stack([e_g, e_ct, e_pt], dim=1), dim=0, return_inverse=True
+            )
+            Nr = rel_uniq.shape[0]
+            r_g, r_ct, r_pt = rel_uniq.unbind(1)
 
             # query relations: edges whose child row is the seed row
             is_seed_row = torch.zeros(R, dtype=torch.bool, device=dev)
@@ -302,20 +330,19 @@ class RowGraphNet(nn.Module):
                 )
             for lyr in self.rel_layers:
                 h_rel = lyr(h_rel, rel_edges)
+            cap = getattr(self, "capture", None)  # analysis hook (graph_study.py); off by default
+            if cap is not None:
+                cap.append({"h_rel": h_rel.detach().float().cpu(), "r_g": r_g.cpu(),
+                            "r_ct": r_ct.cpu(), "r_pt": r_pt.cpu(), "q_rel": q_rel.cpu()})
             # per-FK-edge conditioning vector (zero-init projection)
             fk_cond = self.rel_cond(h_rel)[rel_inv]
 
         # ---------------- candidate value nodes ----------------
         g_sem = target_sem[graphs]
         is_clf = g_sem == SEM_BOOLEAN
-        # per-graph regression codebook (adaptive) or the fixed default bins
-        if reg_cb is None:
-            g_centers = self.bin_centers.float().to(dev).repeat(G, 1)
-            g_len = torch.full((G,), self.n_bins, device=dev, dtype=torch.long)
-        else:
-            g_centers, g_len = reg_cb
-            g_centers = g_centers.to(dev).float().contiguous()
-            g_len = g_len.to(dev).long().clamp(min=2)
+        # Fixed default bins are retained for the original numeric training loss.
+        g_centers = self.bin_centers.float().to(dev).repeat(G, 1)
+        g_len = torch.full((G,), self.n_bins, device=dev, dtype=torch.long)
         Kmax = g_centers.shape[1]
         n_cand = torch.where(is_clf, torch.full_like(g_len, 2), g_len)
         cand_off = torch.cumsum(
@@ -323,23 +350,24 @@ class RowGraphNet(nn.Module):
         )
         C = int(n_cand.sum())
         cand_g = torch.repeat_interleave(torch.arange(G, device=dev), n_cand)
-        # candidate values: [0,1] for clf; codebook centers for reg
+        # candidate values: [0,1] for clf; fixed bin centers for numeric targets
         idx_in_g = torch.arange(C, device=dev) - cand_off[cand_g]
         cand_val = torch.where(
             is_clf[cand_g],
             idx_in_g.float(),
             g_centers[cand_g, idx_in_g.clamp(max=Kmax - 1)],
         )
-        # intrinsic identity: encode the candidate VALUE with the value encoder
-        h_c_bool = self.norm_dict["boolean"](self.enc_dict["boolean"](cand_val[:, None]))
-        h_c_num = self.norm_dict["number"](self.enc_dict["number"](cand_val[:, None]))
-        h_cand = torch.where(is_clf[cand_g][:, None], h_c_bool, h_c_num) + self.cand_emb
+        if self.use_candidates:
+            # intrinsic identity: encode the candidate VALUE with the value encoder
+            h_c_bool = self.norm_dict["boolean"](self.enc_dict["boolean"](cand_val[:, None]))
+            h_c_num = self.norm_dict["number"](self.enc_dict["number"](cand_val[:, None]))
+            h_cand = torch.where(is_clf[cand_g][:, None], h_c_bool, h_c_num) + self.cand_emb
 
         # ---------------- has_label edges (context task rows -> answers) ----
         l_src = torch.empty(0, device=dev, dtype=torch.long)
         l_dst = torch.empty(0, device=dev, dtype=torch.long)
         l_w = torch.empty(0, device=dev, dtype=h_row.dtype)
-        if self.use_label_edges:#把历史task的target row的cell和当前task的candidate node连起来
+        if self.use_label_edges:#Connect cells from historical task target rows to the current task candidate nodes
             lab = (
                 valid
                 & (batch["col_name_idxs"] == target_col[:, None])
@@ -355,8 +383,7 @@ class RowGraphNet(nn.Module):
                 clf_l = is_clf[g_l]
                 # clf: edge to candidate 0/1
                 dst_clf = cand_off[g_l] + (v_bool > 0).long()
-                # reg: two-hot edges to the two nearest codebook centers,
-                # per-label boundaries (each label uses its graph's codebook)
+                # Numeric labels retain two-hot edges to the nearest fixed bins.
                 cbr = g_centers[g_l].contiguous()                 # (L, Kmax)
                 cbn = g_len[g_l]                                  # (L,)
                 lo = cbr[:, 0]
@@ -381,20 +408,23 @@ class RowGraphNet(nn.Module):
                 ).to(h_row.dtype)
 
         # ---------------- message passing over [rows ; candidates] --------
-        h = torch.cat([h_row, h_cand], dim=0)
+        h = torch.cat([h_row, h_cand], dim=0) if self.use_candidates else h_row
         edges = {
-            "f2p": (e_src, e_dst, ones, fk_cond), #src 边的起点 id，消息从这里出发, dst 边的终点 id，消息汇聚到这里, w/ones每条边的权重, fk_cond每条边的附加条件向量(relgraph)
+            "f2p": (e_src, e_dst, ones, fk_cond), #src: edge source ID, where messages originate; dst: edge destination ID, where messages aggregate; w/ones: edge weights; fk_cond: per-edge conditioning vectors (relgraph)
             "p2f": (e_dst, e_src, ones, fk_cond),
-            "label": (l_src, R + l_dst, l_w),  # one-directional into candidates l_src历史行id l_w每条边的权重
+            "label": (l_src, R + l_dst, l_w),  # one-directional into candidates l_src: historical row IDs; l_w: per-edge weights
         }
+        if not self.use_candidates:
+            del edges["label"]
         for layer in self.layers:
             h = layer(h, edges)
 
-        # ---------------- readout打分 ----------------
+        # ---------------- readout scoring ----------------
         h_seed = h[seed_row]  # (G,d)
-        scores = self.readout(
-            torch.cat([h_seed[cand_g], h[R:]], dim=-1)
-        ).squeeze(-1)  # (C,)
+        if self.use_candidates:
+            scores = self.readout(
+                torch.cat([h_seed[cand_g], h[R:]], dim=-1)
+            ).squeeze(-1)  # (C,)
 
         # labels
         y_bool = batch["boolean_values"].float()[bidx, tpos, 0][graphs]
@@ -405,9 +435,12 @@ class RowGraphNet(nn.Module):
 
         if is_clf.any():
             gi = is_clf.nonzero(as_tuple=True)[0]
-            s0 = scores[cand_off[gi]]
-            s1 = scores[cand_off[gi] + 1]
-            logit = s1 - s0
+            if self.use_candidates:
+                s0 = scores[cand_off[gi]]
+                s1 = scores[cand_off[gi] + 1]
+                logit = s1 - s0
+            else:
+                logit = self.head_clf(h_seed[gi]).squeeze(-1)
             loss = loss + F.binary_cross_entropy_with_logits(
                 logit, (y_bool[gi] > 0).float(), reduction="sum"
             )
@@ -420,8 +453,11 @@ class RowGraphNet(nn.Module):
             cbn = g_len[gi]                                      # (Greg,)
             ar = torch.arange(Kmax, device=dev)
             validm = ar[None] < cbn[:, None]                     # (Greg, Kmax)
-            idx = (cand_off[gi][:, None] + ar[None]).clamp(max=C - 1)
-            sc = scores[idx]                                     # (Greg, Kmax)
+            if self.use_candidates:
+                idx = (cand_off[gi][:, None] + ar[None]).clamp(max=C - 1)
+                sc = scores[idx]                                 # (Greg, Kmax)
+            else:
+                sc = self.head_reg(h_seed[gi])                   # (Greg, n_bins)
             sc = torch.where(validm, sc, torch.full_like(sc, float("-inf")))
             lo = cbr[:, 0]
             hi = cbr.gather(1, (cbn - 1)[:, None]).squeeze(1)
@@ -438,31 +474,6 @@ class RowGraphNet(nn.Module):
             logp = F.log_softmax(sc, dim=-1)
             logp = torch.where(validm, logp, torch.zeros_like(logp))  # 0*-inf -> NaN guard
             loss = loss + -(twohot * logp).sum()
-            probs = F.softmax(sc, dim=-1)                        # -inf cols -> 0
-            centers_safe = torch.where(validm, cbr, torch.zeros_like(cbr))
-            if self.local_readout:
-                # Expectation over the argmax bin and its two neighbours only.
-                # The two-hot target puts all mass on two adjacent centers, so
-                # this reads out exactly the quantity training optimises; the
-                # global mean instead lets far-away centers drag the estimate
-                # (fatal when the codebook spans a long tail).  When the model
-                # is confident the two agree, so this only changes the
-                # under-trained / diffuse case.
-                star = probs.argmax(-1, keepdim=True)
-                off = torch.arange(-1, 2, device=dev)
-                win = (star + off).clamp(0, Kmax - 1)             # (Greg,3)
-                win = torch.minimum(win, (cbn - 1)[:, None])
-                pw = probs.gather(1, win)
-                cw = centers_safe.gather(1, win)
-                # a clamped window can repeat an index; keep each center once
-                uniq = torch.ones_like(pw, dtype=torch.bool)
-                uniq[:, 1:] = win[:, 1:] != win[:, :-1]
-                pw = pw * uniq
-                out["reg_pred"] = (pw * cw).sum(-1) / pw.sum(-1).clamp(min=1e-9)
-            else:
-                out["reg_pred"] = (probs * centers_safe).sum(-1)
-            out["reg_y"] = y_num[gi]
-            out["reg_graphs"] = graphs[gi]
 
         out["loss"] = loss / G
         return out

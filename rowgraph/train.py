@@ -7,10 +7,17 @@ Checkpoint selection sees the Standard VALIDATION split only.  Periodic evals
 report the normal and the no-self-label validation metric (sampler
 self_label_dropout=1.0), so label reliance is tracked continuously; the test
 splits are evaluated exactly once, on the selected checkpoint, at the end.
+The step-0 evaluation (untrained initialisation) is logged but never selected.
+
+The training mixture depends only on the held-out database, so several eval
+tasks of that database can share one training run (as RT does); each task
+still selects, evaluates and archives its own checkpoint.
 
 Usage:
   pixi run python rowgraph/train.py --db rel-f1 --task driver-dnf \
       --variant relgraph_no_warm --seed 0
+  pixi run python rowgraph/train.py --db rel-f1 --task all-clf \
+      --variant relgraph_no_warm --d-model 512 --seed 0
 
 variants:
   full      = mp6 + time + label_edges + warm_start
@@ -34,15 +41,13 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from sklearn.metrics import r2_score, roc_auc_score
+from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from rt.data import RelationalDataset  # noqa: E402
-from rt.tasks import (  # noqa: E402
-    all_tasks, forecast_clf_tasks, forecast_reg_tasks, forecast_tasks,
-)
+from rt.tasks import all_tasks, forecast_clf_tasks  # noqa: E402
 from rowgraph.model import RowGraphNet  # noqa: E402
 
 VARIANTS = {
@@ -60,15 +65,14 @@ VARIANTS = {
         "pool": "attn", "train_label_dropout": 0.9, "warm_start": False,
     },
     "relgraph_no_warm": {"use_relgraph": True, "warm_start": False},
+    # ablation: no candidate nodes / label edges, MLP heads on the seed row;
+    # context labels stay visible as cells of their task rows
+    "relgraph_nocand_no_warm": {
+        "use_relgraph": True, "use_candidates": False, "warm_start": False,
+    },
     "relgraph_dropE09_no_warm": {
         "use_relgraph": True, "train_label_dropout": 0.9, "warm_start": False,
     },
-    # adaptive regression codebook (per-task 1-D k-means of TRAIN targets,
-    # K<=64, see gen_codebooks.py) — everything else identical
-    "relgraph_cb_no_warm": {
-        "use_relgraph": True, "warm_start": False, "codebook": True,
-    },
-    "cb_no_warm": {"warm_start": False, "codebook": True},
 }
 CKPT = Path("~/scratch/rt_ckpts").expanduser()
 REPO = Path(__file__).resolve().parents[1]
@@ -109,73 +113,10 @@ def make_ds(tasks, split, seq_len, seed, dropout=0.0):
     )
 
 
-class CodebookResolver:
-    """Maps each graph in a batch to its task's regression codebook.
-
-    A graph's task is identified by (target column index, seed-node range) —
-    the same table_info/column_index data make_ds uses. At construction we
-    assert this key is unambiguous over the given task list.
-    """
-
-    def __init__(self, tasks, split, cbjson, kmax, default_centers):
-        from rt.data import get_column_index
-        sp = {"train": "Train", "val": "Val", "test": "Test"}[split]
-        reg_keys = {(t[0], t[1]) for t in forecast_reg_tasks}
-        rows, lens, self.by_col = [], [], {}
-        # row 0 = default (fixed bins) for clf/unmatched graphs
-        rows.append(self._pad(default_centers, kmax))
-        lens.append(len(default_centers))
-        for db, table, col, _dc in tasks:
-            info = json.load(open(
-                f"{os.environ['HOME']}/scratch/pre/{db}/table_info.json"))
-            key = f"{table}:Db" if f"{table}:Db" in info else f"{table}:{sp}"
-            lo = info[key]["node_idx_offset"]
-            hi = lo + info[key]["num_nodes"]
-            cidx = get_column_index(col, table, db)
-            if (db, table) in reg_keys:
-                jk = f"{db}/{table}"
-                assert jk in cbjson, f"no codebook for reg task {jk}"
-                cs = cbjson[jk]["centers"]
-                rows.append(self._pad(cs, kmax))
-                lens.append(len(cs))
-                rid = len(rows) - 1
-            else:
-                rid = 0  # clf: row unused by the model, default is fine
-            for plo, phi, _ in self.by_col.get(cidx, ()):
-                assert hi <= plo or phi <= lo, (
-                    f"ambiguous task key: col {cidx} ranges overlap")
-            self.by_col.setdefault(cidx, []).append((lo, hi, rid))
-        self.centers = torch.tensor(rows, dtype=torch.float32)
-        self.lens = torch.tensor(lens, dtype=torch.long)
-
-    @staticmethod
-    def _pad(cs, kmax):
-        cs = list(cs)
-        return cs + [cs[-1]] * (kmax - len(cs))  # repeat-pad keeps sortedness
-
-    def __call__(self, batch):
-        tgt = batch["is_targets"]
-        has = tgt.any(-1)
-        if not has.any():
-            return None
-        tpos = tgt.float().argmax(-1)
-        bidx = torch.arange(tgt.shape[0], device=tgt.device)
-        seeds = batch["node_idxs"][bidx, tpos].long()[has].cpu().tolist()
-        cols = batch["col_name_idxs"][bidx, tpos].long()[has].cpu().tolist()
-        rid = []
-        for n, c in zip(seeds, cols):
-            r = 0
-            for lo, hi, cand in self.by_col.get(c, ()):
-                if lo <= n < hi:
-                    r = cand
-                    break
-            rid.append(r)
-        idx = torch.tensor(rid, dtype=torch.long)
-        return self.centers[idx], self.lens[idx]
-
-
 @torch.inference_mode()
-def evaluate(net, ds, task_type, device, max_batches=None, cb_fn=None):
+def evaluate(net, ds, task_type, device, max_batches=None):
+    if task_type != "clf":
+        raise ValueError("Only classification evaluation is supported")
     net.eval()
     ds.sampler.shuffle_py(0)
     loader = DataLoader(ds, batch_size=None, num_workers=4, pin_memory=True)
@@ -191,7 +132,7 @@ def evaluate(net, ds, task_type, device, max_batches=None, cb_fn=None):
         batch["is_padding"][tb:, :] = True
         if not batch["is_targets"].any():
             continue
-        out = net(batch, reg_cb=cb_fn(batch) if cb_fn else None)
+        out = net(batch)
         node = batch["node_idxs"]
         tpos = batch["is_targets"].float().argmax(-1)
         seed_nodes = node[torch.arange(node.shape[0], device=device), tpos]
@@ -204,22 +145,11 @@ def evaluate(net, ds, task_type, device, max_batches=None, cb_fn=None):
                 nid = int(seed_nodes[g])
                 if nid not in preds:
                     preds[nid], ys[nid] = p, y
-        elif task_type == "reg" and "reg_pred" in out:
-            for g, p, y in zip(
-                out["reg_graphs"].tolist(),
-                out["reg_pred"].float().tolist(),
-                out["reg_y"].float().tolist(),
-            ):
-                nid = int(seed_nodes[g])
-                if nid not in preds:
-                    preds[nid], ys[nid] = p, y
     net.train()
     ids = sorted(preds)
     y = np.array([ys[i] for i in ids])
     p = np.array([preds[i] for i in ids])
-    if task_type == "clf":
-        return float(roc_auc_score(y, p)), len(ids)
-    return float(r2_score(y, p)), len(ids)
+    return float(roc_auc_score(y, p)), len(ids)
 
 
 def parse_args(argv):
@@ -227,7 +157,7 @@ def parse_args(argv):
     already-queued SLURM jobs keep running:
         train.py <db> <table> <variant> [seed] [steps] [seq_len] [d_model]
     """
-    tasks = sorted({f"{t[0]}/{t[1]}" for t in forecast_tasks})
+    tasks = sorted({f"{t[0]}/{t[1]}" for t in forecast_clf_tasks})
     p = argparse.ArgumentParser(
         prog="rowgraph/train.py",
         description="Train RowGraphNet from scratch, leave-database-out "
@@ -236,8 +166,11 @@ def parse_args(argv):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--db", required=True, help="eval database, e.g. rel-f1")
-    p.add_argument("--task", "--table", required=True, dest="table",
-                   help="eval task, e.g. driver-dnf")
+    p.add_argument("--task", "--table", required=True, dest="tables",
+                   nargs="+",
+                   help="eval task(s) of --db, e.g. driver-dnf; several tasks, "
+                        "or 'all-clf' for every classification task of --db, "
+                        "share one training run")
     p.add_argument("--variant", required=True, choices=sorted(VARIANTS),
                    help="model configuration (see VARIANTS)")
     p.add_argument("--seed", type=int, default=0)
@@ -247,6 +180,11 @@ def parse_args(argv):
                    help="context length in cells (default: 2048)")
     p.add_argument("--d-model", type=int, default=256, dest="d_model",
                    help="model width (default: 256)")
+    p.add_argument("--lr", type=float, default=1e-3,
+                   help="peak learning rate of the one-cycle schedule "
+                        "(default: 1e-3)")
+    p.add_argument("--wd", type=float, default=0.1,
+                   help="AdamW weight decay (default: 0.1)")
     p.add_argument("--out-dir", type=Path, default=default_out_dir(),
                    dest="out_dir",
                    help=f"results root (default: {default_out_dir()})")
@@ -260,22 +198,38 @@ def parse_args(argv):
               "--db/--task/--variant/--seed/--steps/--seq-len/--d-model",
               flush=True)
         return argparse.Namespace(
-            db=argv[0], table=argv[1], variant=argv[2],
+            db=argv[0], tables=[argv[1]], variant=argv[2], lr=1e-3, wd=0.1,
             out_dir=default_out_dir(), **kw)
     return p.parse_args(argv)
 
 
+def resolve_eval_tasks(db, tables):
+    """--task names -> forecast task tuples of `db` ('all-clf' = every
+    classification forecast task of the database)."""
+    if tables == ["all-clf"]:
+        specs = [t for t in forecast_clf_tasks if t[0] == db]
+    else:
+        specs = []
+        for table in tables:
+            match = [t for t in forecast_clf_tasks if t[0] == db and t[1] == table]
+            assert len(match) == 1, f"unknown classification eval task {db}/{table}"
+            specs.append(match[0])
+    assert specs, f"no eval tasks for {db}"
+    assert len({t[1] for t in specs}) == len(specs), "duplicate eval task"
+    return specs
+
+
 def main():
     args = parse_args(sys.argv[1:])
-    db, table, variant = args.db, args.table, args.variant
-    seed, max_steps = args.seed, args.max_steps
+    db, variant = args.db, args.variant
+    seed, max_steps, lr, wd = args.seed, args.max_steps, args.lr, args.wd
     seq_len, d_model = args.seq_len, args.d_model
     assert variant in VARIANTS, f"unknown variant {variant}; pick from {sorted(VARIANTS)}"
+    assert max_steps > 0
 
     cfg = dict(VARIANTS[variant])
     train_dropout = cfg.pop("train_label_dropout", 0.0)
     warm = cfg.pop("warm_start", True)
-    codebook_on = cfg.pop("codebook", False)
 
     random.seed(seed)
     np.random.seed(seed)
@@ -289,106 +243,115 @@ def main():
     torch.multiprocessing.set_sharing_strategy("file_system")
     torch.set_num_threads(1)
 
-    eval_task = [t for t in forecast_tasks if t[0] == db and t[1] == table]
-    assert len(eval_task) == 1
-    # authoritative: read the task type off RelBench's own task lists.
-    # (column names are ambiguous — e.g. rel-event uses "target" for both a
-    # clf task (user-repeat) and a reg task (user-attendance).)
-    in_clf = any(t[0] == db and t[1] == table for t in forecast_clf_tasks)
-    in_reg = any(t[0] == db and t[1] == table for t in forecast_reg_tasks)
-    assert in_clf != in_reg, f"{db}/{table} not uniquely typed"
-    task_type = "clf" if in_clf else "reg"
+    eval_specs = resolve_eval_tasks(db, args.tables)
 
+    if len(eval_specs) > 1:
+        assert not warm, "warm start loads a per-task checkpoint; use one --task"
     net = RowGraphNet(
         d_model=d_model, n_layers=cfg.pop("n_layers", 6), **cfg
     ).to(device)
     if warm:
         assert d_model == 256, "warm start requires d_model=256"
-        warm_start_encoders(net, db, table)
-    print(f"params={sum(p.numel() for p in net.parameters()):,}", flush=True)
+        warm_start_encoders(net, db, eval_specs[0][1])
+    n_params = sum(p.numel() for p in net.parameters())
+    print(f"params={n_params:,}", flush=True)
 
     train_tasks = [t for t in all_tasks if t[0] != db]
     train_ds = make_ds(train_tasks, "train", seq_len, seed, dropout=train_dropout)
-    evals = {
-        ("val", "normal"): make_ds(eval_task, "val", seq_len, 0, 0.0),
-        ("val", "noself"): make_ds(eval_task, "val", seq_len, 0, 1.0),
-        ("test", "normal"): make_ds(eval_task, "test", seq_len, 0, 0.0),
-        ("test", "noself"): make_ds(eval_task, "test", seq_len, 0, 1.0),
-    }
 
-    cb_train, cb_split = None, {"val": None, "test": None}
-    if codebook_on:
-        cbjson = json.loads(
-            (Path(__file__).resolve().parent / "codebooks_k64.json").read_text())
-        kmax = max(len(v["centers"]) for v in cbjson.values())
-        default = RowGraphNet(d_model=8).bin_centers.tolist()  # fixed 33 bins
-        cb_train = CodebookResolver(train_tasks, "train", cbjson, kmax, default)
-        for sp in ("val", "test"):
-            cb_split[sp] = CodebookResolver(eval_task, sp, cbjson, kmax, default)
-        ek = f"{db}/{table}"
-        print(f"codebook on: kmax={kmax}, eval task {ek} "
-              f"K_eff={cbjson[ek]['K_eff'] if ek in cbjson else 'clf'}", flush=True)
-
-    opt = torch.optim.AdamW(net.parameters(), lr=1e-3, weight_decay=0.1)
+    opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=wd)
     sched = torch.optim.lr_scheduler.OneCycleLR(
-        opt, max_lr=1e-3, total_steps=max_steps, pct_start=0.2,
+        opt, max_lr=lr, total_steps=max_steps, pct_start=0.2,
         anneal_strategy="linear",
     )
 
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
-    tag = f"{db}_{table}_{variant}_s{seed}"
+    suffix = ""
     if seq_len != 2048:
-        tag += f"_ctx{seq_len}"
+        suffix += f"_ctx{seq_len}"
     if d_model != 256:
-        tag += f"_d{d_model}"
-    # legacy checkpoint location — kept exactly as before, never deleted
-    ckpt_dir = Path("ckpts/rowgraph") / tag
-    ckpt_dir.mkdir(parents=True, exist_ok=True)
-
-    # per-run archive: results/{model}/{dataset}/{task}/{start-timestamp}/
+        suffix += f"_d{d_model}"
+    if lr != 1e-3:
+        suffix += f"_lr{lr:g}"
+    if wd != 0.1:
+        suffix += f"_wd{wd:g}"
+    # per-run archive: results/{model}/{dataset}/{task}/{start-timestamp}_s{seed}/
     # timestamp YYYYmmdd-HHMMSS is sortable, so `ls` lists runs chronologically
-    model_id = f"rowgraph_{variant}"
-    if seq_len != 2048:
-        model_id += f"_ctx{seq_len}"
-    if d_model != 256:
-        model_id += f"_d{d_model}"
+    model_id = f"rowgraph_{variant}{suffix}"
     started = datetime.now()
-    run_dir = out_dir / model_id / db / table / started.strftime("%Y%m%d-%H%M%S")
-    run_dir.mkdir(parents=True, exist_ok=True)
 
-    def _git(*args):
-        try:
-            return subprocess.check_output(
-                ["git", *args], stderr=subprocess.DEVNULL, text=True
-            ).strip()
-        except Exception:
-            return None
+    # def _git(*args):
+    #     try:
+    #         return subprocess.check_output(
+    #             ["git", *args], stderr=subprocess.DEVNULL, text=True
+    #         ).strip()
+    #     except Exception:
+    #         return None
 
-    (run_dir / "config.json").write_text(json.dumps({
-        "model_id": model_id, "variant": variant, "db": db, "table": table,
-        "task_type": task_type, "seed": seed, "max_steps": max_steps,
-        "seq_len": seq_len, "d_model": d_model,
-        "warm_start": warm, "train_label_dropout": train_dropout,
-        "codebook": codebook_on,
-        "lr": 1e-3, "weight_decay": 0.1, "batch_size": 32,
-        "optimizer": "AdamW", "scheduler": "OneCycleLR(pct_start=0.2,linear)",
-        "selection": "argmax val_normal over evals every 2048 steps, on a "
-                     "fixed 8192-example prefix of the Standard validation "
-                     "split; test splits are never seen before selection, so "
-                     "both test_normal and test_noself are unselected "
-                     "out-of-sample readouts of the selected checkpoint",
-        "protocol": "from-scratch, leave-db-out (eval db unseen during training)",
-        "params": sum(p.numel() for p in net.parameters()),
-        "device": device, "started": started.isoformat(timespec="seconds"),
-        "host": os.uname().nodename,
-        "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
-        "git_commit": _git("rev-parse", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
-        "legacy_ckpt_dir": str(ckpt_dir), "tag": tag,
-        "cmd": " ".join(sys.argv),
-    }, indent=2))
-    print(f"RUN_DIR {run_dir}", flush=True)
+    # one job per eval task: own datasets, selection state and archive
+    jobs = []
+    for spec in eval_specs:
+        table = spec[1]
+        job = {
+            "table": table,
+            "task_type": "clf",
+            "evals": {
+                ("val", "normal"): make_ds([spec], "val", seq_len, 0, 0.0),
+                ("val", "noself"): make_ds([spec], "val", seq_len, 0, 1.0),
+                ("test", "normal"): make_ds([spec], "test", seq_len, 0, 0.0),
+                ("test", "noself"): make_ds([spec], "test", seq_len, 0, 1.0),
+            },
+            "tag": f"{db}_{table}_{variant}_s{seed}{suffix}",
+            "best_val": -1e9,
+            "best_rec": None,
+        }
+        # legacy checkpoint location — kept exactly as before, never deleted
+        job["ckpt_dir"] = Path("ckpts/rowgraph") / job["tag"]
+        job["ckpt_dir"].mkdir(parents=True, exist_ok=True)
+        # one directory per run: concurrent runs that finish loading in the
+        # same second used to share it and overwrite each other's best.pt
+        parent = out_dir / model_id / db / table
+        parent.mkdir(parents=True, exist_ok=True)
+        stem = f"{started.strftime('%Y%m%d-%H%M%S')}_s{seed}"
+        for k in range(100):
+            job["run_dir"] = parent / (stem if k == 0 else f"{stem}-{k}")
+            try:
+                job["run_dir"].mkdir()
+                break
+            except FileExistsError:
+                continue
+        else:
+            raise RuntimeError(f"no free run directory under {parent}/{stem}")
+
+        (job["run_dir"] / "config.json").write_text(json.dumps({
+            "model_id": model_id, "variant": variant, "db": db, "table": table,
+            "task_type": job["task_type"], "seed": seed, "max_steps": max_steps,
+            "seq_len": seq_len, "d_model": d_model,
+            "warm_start": warm, "train_label_dropout": train_dropout,
+            "lr": lr, "weight_decay": wd, "batch_size": 32,
+            "optimizer": "AdamW", "scheduler": "OneCycleLR(pct_start=0.2,linear)",
+            "selection": "argmax val_normal over evals every 2048 steps, "
+                         "excluding step 0 (untrained initialisation), on a "
+                         "fixed 8192-example prefix of the Standard validation "
+                         "split; test splits are never seen before selection, so "
+                         "both test_normal and test_noself are unselected "
+                         "out-of-sample readouts of the selected checkpoint",
+            "protocol": "from-scratch, leave-db-out (eval db unseen during training)",
+            "eval_tasks": [t[1] for t in eval_specs],  # share this training run
+            "params": n_params,
+            "device": device,
+            "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
+            "started": started.isoformat(timespec="seconds"),
+            "host": os.uname().nodename,
+            "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
+            # "git_commit": _git("rev-parse", "HEAD"),
+            # "git_dirty": bool(_git("status", "--porcelain")),
+            "legacy_ckpt_dir": str(job["ckpt_dir"]), "tag": job["tag"],
+            "cmd": " ".join(sys.argv),
+        }, indent=2))
+        print(f"RUN_DIR {job['run_dir']}", flush=True)
+        jobs.append(job)
 
     # Validation only during training: the test splits must not enter any
     # selection decision, so they are evaluated once at the end (final_full).
@@ -397,19 +360,27 @@ def main():
     # 2,048 was too noisy a criterion to take a max over ~50 evaluations.
     SEL_BATCHES, MON_BATCHES = 256, 64
 
-    def run_evals(step):
-        rec = {"step": step, "tag": tag}
+    def run_evals(job, step):
+        rec = {"step": step, "tag": job["tag"]}
         for mode, nb in (("normal", SEL_BATCHES), ("noself", MON_BATCHES)):
-            m, n = evaluate(net, evals[("val", mode)], task_type, device,
-                            max_batches=nb, cb_fn=cb_split["val"])
-            rec[f"val_{mode}"] = round(m, 4)
+            acc_auroc, n = evaluate(net, job["evals"][("val", mode)], job["task_type"],
+                                    device, max_batches=nb)
+            rec[f"val_{mode}"] = round(acc_auroc, 4)
             rec["n_val" if mode == "normal" else "n_val_noself"] = n
         print("EVAL " + json.dumps(rec), flush=True)
-        with open(run_dir / "evals.jsonl", "a") as fh:
+        with open(job["run_dir"] / "evals.jsonl", "a") as fh:
             fh.write(json.dumps(rec) + "\n")
         return rec
 
-    best_val, best_rec = -1e9, None
+    def select(job, rec):
+        # step 0 is the untrained initialisation: logged for the learning
+        # curve, never selectable
+        if rec["step"] > 0 and rec["val_normal"] > job["best_val"]:
+            job["best_val"] = rec["val_normal"]
+            job["best_rec"] = rec
+            torch.save(net.state_dict(), job["ckpt_dir"] / "best.pt")
+            torch.save(net.state_dict(), job["run_dir"] / "best.pt")
+
     steps = 0
     epoch = 0
     t0 = time.time()
@@ -423,36 +394,30 @@ def main():
             if steps >= max_steps:
                 break
             if steps % 2048 == 0:
-                rec = run_evals(steps)
-                crit = rec["val_normal"]
-                if crit > best_val:
-                    best_val = crit
-                    best_rec = rec
-                    torch.save(net.state_dict(), ckpt_dir / "best.pt")
-                    torch.save(net.state_dict(), run_dir / "best.pt")
+                for job in jobs:
+                    select(job, run_evals(job, steps))
             batch.pop("true_batch_size")
             '''
-            node_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  cell 所属的行 ID
-            table_name_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  cell 所属表的 ID
-            col_name_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  cell 所属列的 ID
-            sem_types: [B,S]  B=batch size, S=seq_len(num of cells)  cell 的语义类型,数据类型
-            class_value_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  文本值在文本词表中的 ID
-            
-            text_values: [B,S,D]  B=batch size, S=seq_len(num of cells), D=embedding_dim  cell 的文本 embedding
-            datetime_values: [B,S,1]  B=batch size, S=seq_len(num of cells), 2=timestamp+delta_t  cell 的时间戳 embedding
-            boolean_values: [B,S,1]  B=batch size, S=seq_len(num of cells)  cell 的布尔值 embedding
-            number_values: [B,S,1]  B=batch size, S=seq_len(num of cells)  cell 的数值 embedding
-            
-            f2p_nbr_idxs: [B,S,N]  N=number of neighbors 该行通过外键连接的父行 ID
-            
-            masks: [B,S]  B=batch size, S=seq_len(num of cells)  该 cell 的值是否应该隐藏
-            is_targets: [B,S]  B=batch size, S=seq_len(num of cells)  该 cell 是否是预测目标
+            node_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  ID of the row containing the cell
+            table_name_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  ID of the table containing the cell
+            col_name_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  ID of the column containing the cell
+            sem_types: [B,S]  B=batch size, S=seq_len(num of cells)  semantic type / data type of the cell
+            class_value_idxs: [B,S]  B=batch size, S=seq_len(num of cells)  ID of the text value in the text vocabulary
+
+            text_values: [B,S,D]  B=batch size, S=seq_len(num of cells), D=embedding_dim  text embedding of the cell
+            datetime_values: [B,S,1]  B=batch size, S=seq_len(num of cells), 2=timestamp+delta_t  timestamp embedding of the cell
+            boolean_values: [B,S,1]  B=batch size, S=seq_len(num of cells)  boolean-value embedding of the cell
+            number_values: [B,S,1]  B=batch size, S=seq_len(num of cells)  numeric-value embedding of the cell
+
+            f2p_nbr_idxs: [B,S,N]  N=number of neighbors IDs of parent rows referenced by this row through foreign keys
+
+            masks: [B,S]  B=batch size, S=seq_len(num of cells)  whether the cell value should be hidden
+            is_targets: [B,S]  B=batch size, S=seq_len(num of cells)  whether the cell is a prediction target
             '''
-            
-            cb = cb_train(batch) if cb_train is not None else None
+
             for k in batch:
                 batch[k] = batch[k].to(device, non_blocking=True)
-            out = net(batch, reg_cb=cb)
+            out = net(batch)
             opt.zero_grad(set_to_none=True)
             out["loss"].backward()
             torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
@@ -466,41 +431,46 @@ def main():
                     flush=True,
                 )
 
-    rec = run_evals(steps)
-    if rec["val_normal"] > best_val:
-        best_val = rec["val_normal"]
-        best_rec = rec
-        torch.save(net.state_dict(), ckpt_dir / "best.pt")
-        torch.save(net.state_dict(), run_dir / "best.pt")
-    print("BEST " + json.dumps(best_rec), flush=True)
+    for job in jobs:
+        job["final_rec"] = run_evals(job, steps)
+        select(job, job["final_rec"])
+        print("BEST " + json.dumps(job["best_rec"]), flush=True)
+    elapsed = round(time.time() - t0, 1)
 
-    # final FULL evaluation of the best checkpoint (paper-comparable numbers).
-    # Load this run's own copy: ckpt_dir is keyed by tag only, so two jobs with
-    # the same tag (duplicate submit, smoke test) would overwrite each other.
-    net.load_state_dict(torch.load(run_dir / "best.pt", map_location=device))
-    final_full = {"tag": tag}
-    for (split, mode), ds in evals.items():
-        m, n = evaluate(net, ds, task_type, device,  # no cap = full split
-                        cb_fn=cb_split[split])
-        final_full[f"{split}_{mode}"] = round(m, 4)
-        final_full["n_" + split] = n
-    print("FINAL_FULL " + json.dumps(final_full), flush=True)
-    summary = {
-        "tag": tag, "model_id": model_id, "db": db, "table": table,
-        "seed": seed, "best": best_rec, "final": rec, "final_full": final_full,
-        "finished": datetime.now().isoformat(timespec="seconds"),
-        "elapsed_sec": round(time.time() - t0, 1),
-    }
-    with open(out_dir / f"rowgraph_{tag}.json", "w") as f:  # legacy flat file
-        json.dump(summary, f, indent=2)
-    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2))
-    (run_dir / "final_full.json").write_text(json.dumps(final_full, indent=2))
-    jid = os.environ.get("SLURM_JOB_ID")
-    if jid:  # keep this run's SLURM log next to its own results
-        # sbatch writes logs to results/logs/ regardless of --out-dir
-        for log in (REPO / "results" / "logs").glob(f"*_{jid}.out"):
-            shutil.copy2(log, run_dir / "slurm.out")
-    print(f"RUN_ARTIFACTS {run_dir}", flush=True)
+    # final FULL evaluation of each task's best checkpoint (paper-comparable
+    # numbers). Load the run's own copy: ckpt_dir is keyed by tag only, so two
+    # jobs with the same tag (duplicate submit, smoke test) would overwrite
+    # each other.
+    for job in jobs:
+        run_dir = job["run_dir"]
+        net.load_state_dict(torch.load(run_dir / "best.pt", map_location=device))
+        final_full = {"tag": job["tag"]}
+        for (split, mode), ds in job["evals"].items():
+            acc_auroc, n = evaluate(net, ds, job["task_type"], device)  # no cap = full split
+            final_full[f"{split}_{mode}"] = round(acc_auroc, 4)
+            final_full["n_" + split] = n
+        print("FINAL_FULL " + json.dumps(final_full), flush=True)
+        summary = {
+            "tag": job["tag"], "model_id": model_id, "db": db,
+            "table": job["table"], "seed": seed, "best": job["best_rec"],
+            "final": job["final_rec"], "final_full": final_full,
+            "finished": datetime.now().isoformat(timespec="seconds"),
+            "elapsed_sec": elapsed,
+        }
+        with open(out_dir / f"rowgraph_{job['tag']}.json", "w") as f:  # legacy flat file
+            json.dump(summary, f, indent=2)
+        (run_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+        (run_dir / "final_full.json").write_text(json.dumps(final_full, indent=2))
+        # keep this run's log next to its results: RUN_LOG names it when one
+        # SLURM job runs several trainings, otherwise it is the job's own log
+        # (sbatch writes logs to results/logs/ regardless of --out-dir)
+        jid = os.environ.get("SLURM_JOB_ID")
+        logs = [Path(os.environ["RUN_LOG"])] if os.environ.get("RUN_LOG") else (
+            list((REPO / "results" / "logs").glob(f"*_{jid}.out")) if jid else [])
+        for log in logs:
+            if log.exists():
+                shutil.copy2(log, run_dir / "slurm.out")
+        print(f"RUN_ARTIFACTS {run_dir}", flush=True)
 
 
 if __name__ == "__main__":

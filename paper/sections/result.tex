@@ -1,0 +1,257 @@
+\section{Experiments}
+\label{sec:result}
+
+\subsection{Experimental Setup}
+\label{sec:setup}
+
+\paragraph{Tasks and transfer protocol.}
+Our experiments focus exclusively on entity classification. We evaluate ten
+binary tasks from six RelBench databases:
+Amazon, Avito, F1, H\&M, Stack, and Trial, following the task suite used by
+\RT{} \citep{ranjan2026rt}. For each target database, we train a model on the
+remaining six databases in the seven-database source pool. The target database
+is excluded from gradient-based training. We use the benchmark's Standard
+protocol, which allows temporally valid historical task labels in the sampled
+context. At inference, the model predicts on the target database with fixed
+parameters; target validation data are used only for model selection.
+
+\paragraph{Training and model selection.}
+We train the default \model{} with hidden width $d=256$ from scratch for 100,000 steps,
+using AdamW, batch size 32, and a context budget of 2,048 cells. One pretraining run takes around 5 hours on a single AMD Instinct MI300A accelerator, including periodic validation. For each target task, we select the checkpoint with the highest Standard validation AUROC and evaluate it on the complete test split. We report results (seed = 2) using AUROC $\times100$ and the macro-average across the ten tasks.
+% Implementation details: six RowGraph layers, two RelationGraph layers;
+% linear OneCycleLR with 20% warm-up, gradient clipping at 1.0.
+% d256 default lr=1e-3, wd=0.1; Avito wd=0.3; Stack lr=2e-3.
+% Checkpoint selection: every 2048 updates and the final update, on a fixed
+% Standard-validation prefix of up to 8192 examples; step 0 excluded.
+% Runtime source: results/numparameter_experiment/d256/*/summary.json,
+% elapsed_sec, deduplicated by held-out database: 3.34--9.69 hours.
+% Timer stops before final full-split evaluation (rowgraph/train.py).
+% Jobs 7517901 and 7523431 share devices in the gpu_mi300 partition.
+% Hardware mapping: https://wiki.bwhpc.de/e/BwUniCluster3.0/Hardware_and_Architecture
+
+\paragraph{Baselines.}
+We compare \model{} with Entity Mean (EM), Griffin, and \RT{}. EM predicts
+the mean of an entity's historical labels. Griffin is a relational foundation
+model originally evaluated through supervised downstream fine-tuning
+\citep{wang2025griffin}. We use the adaptation reported by \citet{ranjan2026rt},
+which uses a similar parameter count to \RT{} and includes historical task-table
+rows in its sampled context to enable zero-shot prediction. \RT{} is a
+pretrained relational transformer that predicts on unseen databases without
+fine-tuning. EM and Griffin scores come from the published \RT{} comparison
+without target-database pretraining. All \RT{} results are obtained by
+evaluating the authors' released leave-database-out pretrained checkpoints.
+We include both the compact
+$d=256$ and larger $d=744$ variants of \model{}.
+% Griffin details: RT Section 4.3 and Appendix I.4; hidden width 512 -> 728,
+% 22.8M vs. RT's 22.3M parameters; leave-one-database-out pretraining.
+% Griffin is pretrained on forecasting tasks only in that comparison.
+
+\subsection{Comparison with Baselines}
+\label{sec:standard_results}
+
+Table~\ref{tab:standard} compares two sizes of \model{} with the baselines.
+The compact $d=256$ model achieves 70.0 macro AUROC with 2.78M parameters,
+compared with 69.9 for \RT{}, 64.0 for Griffin, and 66.7 for EM. It uses
+only 12.5\% as many trainable parameters as \RT{}. Increasing the width to
+$d=744$ gives 71.5 macro AUROC with 22.24M parameters, exceeding \RT{} by
+1.6 points at a similar model size. The larger model improves over the
+compact variant on tasks such as Stack User Badge, Stack User Engagement,
+and H\&M User Churn. These results show that \model{} offers competitive
+accuracy at a small parameter count and higher average accuracy when its
+capacity is increased to a size comparable to the neural baselines.
+
+% ReGRow: results/numparameter_experiment/d{256,744}/*/summary.json,
+% final_full.test_normal; seed 2. Macros x100 = 70.015 and 71.472.
+% RT: results/case_study/raw/hops_rt/*.json, auroc.full;
+% macro x100 = 69.91417825014221 (matches earlier local results at 1 decimal).
+\begin{table}[t]
+\centering
+\caption{Comparison with baselines on the Standard test splits. Scores are
+AUROC $\times100$; macro averages weight tasks equally. Both \model{}
+variants use seed 2; baseline sources are described in Section~\ref{sec:setup}.
+Bold denotes the best score at the displayed precision.}
+\label{tab:standard}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\toprule
+& & & & \multicolumn{2}{c}{\model{}} \\
+\cmidrule(lr){5-6}
+Task & EM & Griffin & \RT{} & $d=256$ & $d=744$ \\
+\midrule
+Parameters & 0 & 22.8M & 22.3M & 2.78M & 22.24M \\
+\midrule
+Amazon / Item Churn & \textbf{73.0} & 69.0 & 70.2 & 68.9 & 69.1 \\
+Amazon / User Churn & 64.4 & 62.3 & \textbf{64.6} & 63.5 & 62.8 \\
+Avito / User Clicks & 44.7 & 45.9 & 58.5 & 62.2 & \textbf{62.5} \\
+Avito / User Visits & 60.7 & 60.7 & 62.1 & \textbf{64.1} & 62.5 \\
+F1 / Driver DNF & 75.4 & 57.7 & 79.1 & 81.2 & \textbf{81.4} \\
+F1 / Driver Top-3 & 85.0 & 82.5 & 89.1 & \textbf{89.7} & \textbf{89.7} \\
+H\&M / User Churn & 64.4 & 60.2 & 64.2 & 65.9 & \textbf{67.8} \\
+Stack / User Badge & 66.2 & 73.5 & \textbf{80.6} & 75.8 & 80.1 \\
+Stack / User Engagement & 83.5 & 77.5 & 78.3 & 77.0 & \textbf{85.8} \\
+Trial / Study Outcome & 50.0 & 51.0 & 52.4 & 51.7 & \textbf{53.0} \\
+\midrule
+Macro average & 66.7 & 64.0 & 69.9 & 70.0 & \textbf{71.5} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Effect of Model Size}
+\label{sec:model_size}
+
+To examine how performance changes with model size, we vary the hidden width
+$d\in\{128,256,512,744\}$, giving models with 0.75M, 2.78M, 10.67M, and
+22.24M trainable parameters. The largest model has approximately the same
+parameter count as \RT{}. All variants retain the same architecture, layer
+counts, context budget, and 100,000-update training budget. We use the default
+optimization settings for $d=128$ and validation-selected settings for the
+larger models.
+
+Table~\ref{tab:model_size} shows a consistent increase in macro AUROC with
+model size: 67.8, 70.0, 71.0, and 71.5 across the four widths. The smallest
+model retains 67.8 AUROC with only 0.75M parameters, while scaling the main
+$d=256$ model to $d=744$ improves AUROC by 1.5 points. At approximately
+\RT{}'s parameter count, the largest \model{} achieves 71.5 compared with
+69.9 for \RT{}. Improvements are particularly clear on Stack User Badge,
+Stack User Engagement, and Trial Study Outcome, where scores rise at every
+width. Although individual tasks do not always improve monotonically, the
+aggregate trend shows that \model{} benefits from increased capacity under
+the evaluated settings, with smaller gains at the largest widths.
+
+% Sources: results/numparameter_experiment/d{128,256,512,744}/*/summary.json.
+% Macro AUROC x100: 67.819, 70.015, 70.968, 71.472.
+% Exact parameter counts: 750465, 2778881, 10669569, 22235929.
+% Configuration-search provenance: results/numparameter_experiment/README.md.
+\begin{table}[t]
+\centering
+\caption{Effect of model size on Standard test AUROC $\times100$. All
+\model{} variants use seed 2 and the same training-update budget, with
+optimization settings as described in the text.
+Bold denotes the best score at the displayed precision.}
+\label{tab:model_size}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
+\toprule
+Task & $d=128$ & $d=256$ & $d=512$ & $d=744$ \\
+\midrule
+Parameters & 0.75M & 2.78M & 10.67M & 22.24M \\
+\midrule
+Amazon / Item Churn & 70.7 & 68.9 & \textbf{71.5} & 69.1 \\
+Amazon / User Churn & \textbf{63.9} & 63.5 & \textbf{63.9} & 62.8 \\
+Avito / User Clicks & 61.7 & 62.2 & 59.6 & \textbf{62.5} \\
+Avito / User Visits & 64.0 & \textbf{64.1} & 63.6 & 62.5 \\
+F1 / Driver DNF & 79.3 & 81.2 & 80.8 & \textbf{81.4} \\
+F1 / Driver Top-3 & 87.3 & \textbf{89.7} & 89.2 & \textbf{89.7} \\
+H\&M / User Churn & 66.5 & 65.9 & \textbf{67.8} & \textbf{67.8} \\
+Stack / User Badge & 74.9 & 75.8 & 79.4 & \textbf{80.1} \\
+Stack / User Engagement & 60.0 & 77.0 & 81.1 & \textbf{85.8} \\
+Trial / Study Outcome & 49.8 & 51.7 & 52.8 & \textbf{53.0} \\
+\midrule
+Macro average & 67.8 & 70.0 & 71.0 & \textbf{71.5} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Case Study}
+\label{sec:case_study}
+
+We examine what information the trained model uses through three
+inference-time interventions. All \model{} experiments use the $d=256$,
+seed-2 checkpoints from the main comparison, without retraining, and evaluate
+the complete test splits of the ten classification tasks.
+Table~\ref{tab:case_study} summarizes the context and RelationGraph
+interventions, and Table~\ref{tab:history_masked} the effect of hiding the
+entity's label history.
+
+\paragraph{Where does predictive evidence lie?}
+For each query, we sample a context once and retain only rows within $k$
+PK--FK hops of the query task row. The model still runs all six RowGraph
+layers. Macro AUROC rises from 52.1 with one-hop context to 69.3 with
+two-hop context, close to 70.0 with the full context. Thus, most of the
+observed gain comes from the two-hop neighborhood. This neighborhood
+contains both activity records and historical rows from the task table,
+reached through the shared entity row. These task-table rows expose previous
+outcomes for the same entity, which may account for much of the two-hop
+gain. We therefore hide their target labels to test how strongly predictions
+depend on this source of information.
+
+\paragraph{Dependence on entity label history.}
+We hide only the target-column values in historical task-table rows
+associated with the query entity during context construction. Historical
+activity records in the database tables and other entities' task labels
+remain available for sampling. We call this condition \emph{History Masked}.
+Contexts are constructed separately for the Standard and History Masked
+conditions. \model{} drops from 70.0 to 58.1 macro AUROC, with the largest
+losses on the F1 and Stack tasks. This indicates that historical task labels
+are a major source of predictive information for the trained model.
+
+For comparison, Table~\ref{tab:history_masked} reports the same intervention
+for \RT{}, which drops from 69.9
+to 52.1 macro AUROC. Both models lose most of their margin over chance when
+the query entity's historical task labels are hidden, showing that reliance
+on this information is shared by both models.
+
+\paragraph{Dependence on relation conditioning.}
+Finally, we disable RelationGraph conditioning at inference while keeping
+the checkpoint and sampled context fixed. As shown in Table~\ref{tab:case_study},
+macro AUROC falls from 70.0 to 67.7, with the largest decrease on F1 Driver DNF.
+This indicates that the
+trained model uses relation-conditioned messages to support its predictions
+on this suite. The effect varies across tasks, including an improvement
+when conditioning is disabled on Stack User Engagement. This intervention
+measures the trained model's reliance on RelationGraph; it does not measure
+the difference between models trained with and without the component.
+
+% Sources: results/case_study/raw/hops_relgraph/*.json (hops and RelationGraph);
+% per-task tables in results/case_study/exp1_hops and exp3_relation_graph.
+\begin{table}[t]
+\centering
+\caption{Inference-time case study of \model{}: macro test AUROC
+$\times100$ across ten classification tasks, using the main $d=256$
+checkpoints without retraining. Each row restricts the sampled context or
+disables one component at inference.}
+\label{tab:case_study}
+\small
+\setlength{\tabcolsep}{12pt}
+\begin{tabular}{lr}
+\toprule
+Condition & \model{} \\
+\midrule
+Standard (full context) & 70.0 \\
+\midrule
+Query row only & 50.1 \\
+Within 1 hop & 52.1 \\
+Within 2 hops & 69.3 \\
+Within 3 hops & 69.9 \\
+Within 4 hops & 69.9 \\
+\midrule
+RelationGraph conditioning off & 67.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Sources: ReGRow from results/numparameter_experiment/d256/*/summary.json
+% (final_full.test_normal, final_full.test_noself).  RT: released
+% leave-database-out checkpoints, our local evaluation at RT's 1,024-cell
+% context; Standard = results/case_study/raw/hops_rt/*.json ("full"), History
+% Masked = results/case_study/exp2_history_masked/results.csv (provenance in
+% that directory's README.md).
+\begin{table}[t]
+\centering
+\caption{Effect of hiding the query entity's label history: macro test
+AUROC $\times100$ across ten classification tasks. \model{} uses the main
+$d=256$ checkpoints. Both models are evaluated without retraining.}
+\label{tab:history_masked}
+\small
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{lrrr}
+\toprule
+Model & Standard & History Masked & Change \\
+\midrule
+\model{} & 70.0 & 58.1 & $-11.9$ \\
+\RT{} & 69.9 & 52.1 & $-17.8$ \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,501 @@
+\section{Methodology}
+\label{sec:method}
+
+\model{} predicts the label $y_g$ of a query $g$ from its sampled context
+$\mathcal X_g$ with parameters shared across databases. Following
+Section~\ref{sec:introduction}, each block of Figure~\ref{fig:architecture}
+uses one kind of structure that every database provides, in place of a
+component that a relational GNN ties to one schema. Context Sampling gathers
+the rows linked to the query (Section~\ref{sec:method:sampling}). Row
+Initialization encodes each row from its cells and column names instead of a
+per-table encoder (Section~\ref{sec:method:initialization}). RowGraph passes
+messages along PK--FK references with edge types shared by all databases
+instead of a weight matrix per relation (Section~\ref{sec:method:rowgraph}).
+Relation Encoding and RelationGraph derive a representation of each relation
+from the schema instead of a learned relation embedding
+(Section~\ref{sec:method:relations}). Prediction compares the query with the
+labeled rows of the task table instead of applying a task-specific output
+head (Section~\ref{sec:method:prediction}). We use \emph{row} for a record of
+a table, write $T_r$ and $t_r$ for the table and timestamp of row $r$, and
+drop the query index $g$ when a quantity concerns a single query.
+
+\subsection{Context Sampling}
+\label{sec:method:sampling}
+
+Following \RT{}, a prediction task is given as a task table whose rows hold a
+foreign key to an entity, a timestamp, and a label. The query row
+$r_g^\star$ is the task-table row whose label $y_g$ is to be predicted, and
+its timestamp is the prediction time $t_g$. Context Sampling collects a
+bounded input around $r_g^\star$ with the sampler of \RT{}
+\citep[Section~3.1 and Appendix~A]{ranjan2026rt}: starting from $r_g^\star$,
+it includes the parent rows reached through foreign keys (from the task row
+to the driver in Figure~\ref{fig:architecture}) and at most 256 randomly
+chosen child rows of database tables per sampled row (the driver's results), excludes rows with
+timestamps later than $t_g$ and task-table rows of other tasks, and stops at
+2{,}048 cells. The label cell of $r_g^\star$ is masked, while earlier task rows
+keep their labels. The two panels of the block are the two parts of the
+result. The sampled rows $\mathcal V_g$ with their visible cells (lower panel)
+are the input of Row Initialization. The foreign-key references between them,
+$\mathcal E_g$, and the tables they connect (upper panel) give the edges of
+RowGraph and the relations of RelationGraph.
+
+\subsection{Row Initialization}
+\label{sec:method:initialization}
+
+Tables differ in their columns, and the tables of an unseen database have
+never been observed, so Row Initialization encodes every row with the same
+encoder and uses the column name to tell the model what each value means. As
+in \RT{}, a visible cell $n$ has a value of semantic type
+$\sigma(n)\in\{\mathsf{num},\mathsf{text},\mathsf{time},\mathsf{bool}\}$ and
+the column name ``$\langle$column$\rangle$ of $\langle$table$\rangle$'', e.g.,
+``nationality of drivers'', which a frozen pretrained sentence encoder maps to
+a 384-dimensional vector $\mathbf u_n^{\mathrm{col}}$. Text values are embedded
+in the same way, numbers and Booleans are standardized per column, and
+timestamps are standardized globally, giving the value input
+$\mathbf u_n^{\mathrm{val}}$. The cell vector is
+\begin{equation}
+ \mathbf x_n=
+ \operatorname{RMSNorm}_{\mathrm{col}}\!\left(W_{\mathrm{col}}\mathbf u_n^{\mathrm{col}}+\mathbf b_{\mathrm{col}}\right)
+ +\operatorname{RMSNorm}_{\sigma(n)}\!\left(W_{\sigma(n)}\mathbf u_n^{\mathrm{val}}+\mathbf b_{\sigma(n)}\right),
+ \label{eq:cell}
+\end{equation}
+where $W_{\mathrm{col}}$ and one $W_\sigma$ per value type are shared across
+tables. RMSNorm \citep{zhang2019rmsnorm} divides a vector by its root mean
+square and multiplies it by a learned per-dimension gain; here it puts the
+column-name term, which comes from a text embedding, and the value term,
+often a single number, on a comparable scale before they are added.
+
+The row vector pools the visible cells $\mathcal O_r$ of row $r$ and adds the
+time of the row and a marker for the query row:
+\begin{equation}
+ \mathbf h_r^{(0)}=
+ W_{\mathrm{row}}\!\left[
+ \operatorname*{mean}_{n\in\mathcal O_r}\mathbf x_n
+ \concat
+ \operatorname*{max}_{n\in\mathcal O_r}\mathbf x_n
+ \right]+\mathbf b_{\mathrm{row}}
+ +\psi(t_g-t_r)
+ +\ind[r=r_g^\star]\,\mathbf e_{\mathrm{query}},
+ \label{eq:rowencoding}
+\end{equation}
+where $\concat$ denotes concatenation and the maximum is taken per dimension.
+The mean and the maximum give a fixed-size vector for any number and order of
+columns: the mean summarizes all cells, and the maximum keeps strong
+responses of single cells that the mean would dilute. Cells are pooled only
+here, so all later computation operates on rows. The time term encodes the
+gap $\Delta=t_g-t_r$ in days, because absolute dates differ across databases
+while the time elapsed before the prediction is comparable: $\psi$ is a
+linear map of $[\cos(\omega_j\Delta),\sin(\omega_j\Delta)]_{j=1}^{16}$ with
+wavelengths $2\pi/\omega_j$ spaced logarithmically between one day and one
+hundred years, as in sinusoidal position encodings
+\citep{vaswani2017attention}, and rows without a timestamp receive $\Delta=0$.
+The indicator $\ind[r=r_g^\star]$ equals one for the query row and zero for
+every other row, so the learned vector $\mathbf e_{\mathrm{query}}$ marks the
+query row. All other operations treat rows alike, and this marker, a form of
+the labeling trick \citep{zhang2021labeling}, is what tells the network which
+row it is predicting.
+
+\subsection{RowGraph}
+\label{sec:method:rowgraph}
+
+RowGraph combines the evidence spread over linked rows. The PK--FK references
+decide which rows exchange messages, and the edge types are the same in every
+database, so no weight belongs to a particular relation. The nodes are the
+sampled rows and two class nodes $c_0$ and $c_1$, one per label value. For
+each reference in $\mathcal E_g$ from a child row $r_c$ to a parent row $r_p$,
+an $\fkp$ edge $r_c\rightarrow r_p$ lets a row collect information from the
+rows that reference it (a driver from its results), and a $\pkf$ edge
+$r_p\rightarrow r_c$ lets a row receive information from the rows it
+references (the query row from the driver); these are the two arrow colors of
+the RowGraph block. A $\mathsf{label}$ edge runs from every sampled task-table
+row other than $r_g^\star$ whose label $k$ is visible to $c_k$. A relational
+GNN instead learns a weight matrix per relation
+\citep{schlichtkrull2018rgcn,fey2024rdl}, which does not exist for the
+relations of an unseen database.
+
+The class nodes let labels enter as input rather than through a task-specific
+output head; they and the label edges are omitted from the figure. The
+initial state of $c_k$ is the Boolean value term of Eq.~\eqref{eq:cell}
+applied to $k$, plus a learned vector $\mathbf e_{\mathrm{class}}$. Class nodes
+only receive messages, so after message passing $c_k$ summarizes the sampled
+rows labeled $k$, and label information is not passed back to the database
+rows.
+
+Each node $i$ has a state $\mathbf h_i^{(\ell)}$ after layer $\ell$; rows
+start from Eq.~\eqref{eq:rowencoding} and class nodes from their initial
+state. With $\tau_e\in\{\fkp,\pkf,\mathsf{label}\}$ the type of edge $e$ and
+$\mathcal I(i)$ the incoming edges of node $i$, each of the six layers
+computes
+\begin{equation}
+ \begin{aligned}
+ \mathbf m_e^{(\ell)}&=\relu\!\left(W_{\tau_e}^{(\ell)}\mathbf h_{\operatorname{src}(e)}^{(\ell-1)}+\mathbf b_{\tau_e}^{(\ell)}\right),
+ \qquad
+ \mathbf a_i^{(\ell)}=\frac{1}{\max(1,|\mathcal I(i)|)}\sum_{e\in\mathcal I(i)}\mathbf m_e^{(\ell)},\\
+ \mathbf h_i^{(\ell)}&=\operatorname{LN}^{(\ell)}\!\left(\mathbf h_i^{(\ell-1)}
+ +\relu\!\left(W_{\mathrm{self}}^{(\ell)}\mathbf h_i^{(\ell-1)}+\mathbf b_{\mathrm{self}}^{(\ell)}\right)
+ +\mathbf a_i^{(\ell)}\right),
+ \end{aligned}
+ \label{eq:rowmp}
+\end{equation}
+where $\operatorname{src}(e)$ is the source node of $e$ and $\operatorname{LN}$
+is layer normalization \citep{ba2016layernorm}. Incoming messages are averaged
+rather than weighted by learned attention: the references already state which
+rows are related, and the mean keeps the scale of $\mathbf a_i$ independent
+of the number of incoming edges, which ranges from one to hundreds, as in the
+mean aggregator of GraphSAGE \citep{hamilton2017graphsage}. The residual and
+self terms keep each node's own information.
+
+Sharing the edge types has a cost: every child-to-parent reference uses the
+same $W_{\fkp}$, so \texttt{Results}$\rightarrow$\texttt{Drivers}, which
+connects a result to the driver who obtained it, and
+\texttt{Results}$\rightarrow$\texttt{Races}, which connects it to the race in
+which it occurred, are processed alike. The next two blocks restore this
+distinction without relation-specific parameters.
+
+\subsection{Relation Encoding and RelationGraph}
+\label{sec:method:relations}
+
+The relation of a reference $e$ from $r_c$ to $r_p$ is the ordered table pair
+$\chi(e)=(T_{r_c},T_{r_p})$, and $\mathcal Q_g$ is the set of relations in the
+context; references through different foreign-key columns between the same
+two tables share one relation. Relations carry no features of their own,
+since their names are not used, but the schema shows how each relation is
+connected to the others, and this pattern is defined in any database.
+Relation Encoding links two distinct relations $\rho=(A,B)$ and
+$\rho'=(C,D)$ that share a table, in one of the three ways shown in
+Figure~\ref{fig:architecture}: \emph{shared child} ($A=C$, e.g.,
+\texttt{Results}$\rightarrow$\texttt{Drivers} and
+\texttt{Results}$\rightarrow$\texttt{Races}) and \emph{shared parent} ($B=D$,
+e.g., \texttt{Results}$\rightarrow$\texttt{Drivers} and
+\texttt{Task}$\rightarrow$\texttt{Drivers}), each linked in both directions,
+and \emph{directed chain} ($B=C$, e.g.,
+\texttt{Results}$\rightarrow$\texttt{Races} and
+\texttt{Races}$\rightarrow$\texttt{Circuits}), whose two directions use
+separate transformations. Reading the child table as the head and the parent
+table as the tail of a relation, these four edge types are the head-to-head,
+tail-to-tail, head-to-tail, and tail-to-head interactions of ULTRA
+\citep{galkin2024ultra}. Table names only decide which relations share a
+table; they never select a learned parameter.
+
+RelationGraph runs message passing over this graph of relations and, as in
+ULTRA, is conditioned on the query. Let $\mathcal Q_g^\star$ be the relations
+of the references that leave the query row (\texttt{Task}$\rightarrow$\texttt{Drivers},
+red in Figure~\ref{fig:architecture}) and $\mathbf z_\rho^{(p)}$ the state of
+relation $\rho$ after layer $p$. The initial states are
+\begin{equation}
+ \mathbf z_\rho^{(0)}=\ind[\rho\in\mathcal Q_g^\star]\,\mathbf e_{\mathrm{rel}}:
+ \label{eq:relinit}
+\end{equation}
+the query relations start from a learned vector $\mathbf e_{\mathrm{rel}}$ and
+all other relations from the zero vector. Without this marker every relation
+would start from the same state; with it, the state of a relation reflects
+its position relative to the query relation. For example,
+\texttt{Results}$\rightarrow$\texttt{Drivers} shares its parent table with
+\texttt{Task}$\rightarrow$\texttt{Drivers} and carries the activity of the
+queried driver, whereas \texttt{Races}$\rightarrow$\texttt{Circuits} lies
+farther away. Two layers of the same form as Eq.~\eqref{eq:rowmp} update the
+states:
+\begin{equation}
+ \mathbf z_\rho^{(p)}=\operatorname{LN}^{(p)}\!\left(\mathbf z_\rho^{(p-1)}
+ +\relu\!\left(U_{\mathrm{self}}^{(p)}\mathbf z_\rho^{(p-1)}+\mathbf b_{\mathrm{self}}^{(p)}\right)
+ +\frac{1}{\max(1,|\mathcal N(\rho)|)}\sum_{(\rho',\eta)\in\mathcal N(\rho)}
+ \relu\!\left(U_\eta^{(p)}\mathbf z_{\rho'}^{(p-1)}+\mathbf b_\eta^{(p)}\right)\right),
+ \label{eq:relmp}
+\end{equation}
+where $\mathcal N(\rho)$ contains the pairs of a relation $\rho'$ linked to
+$\rho$ and the type $\eta$ of the link.
+
+The arrow from RelationGraph to RowGraph adds
+$\boldsymbol\delta_\rho=W_{\mathrm{cond}}\mathbf z_\rho^{(2)}+\mathbf b_{\mathrm{cond}}$
+to every message along a reference of relation $\rho$: for
+$\tau_e\in\{\fkp,\pkf\}$, the message in Eq.~\eqref{eq:rowmp} becomes
+\begin{equation}
+ \mathbf m_e^{(\ell)}=\relu\!\left(W_{\tau_e}^{(\ell)}\mathbf h_{\operatorname{src}(e)}^{(\ell-1)}
+ +\mathbf b_{\tau_e}^{(\ell)}+\boldsymbol\delta_{\chi(e)}\right).
+ \label{eq:condmsg}
+\end{equation}
+Label messages are unchanged, the two directions of a reference share
+$\boldsymbol\delta_{\chi(e)}$ but keep their own $W_{\tau_e}$, and
+$\boldsymbol\delta$ is computed once for all six layers. Added before the
+ReLU, $\boldsymbol\delta$ can strengthen or suppress the messages of a
+relation. $W_{\mathrm{cond}}$ and $\mathbf b_{\mathrm{cond}}$ start at zero, so
+training begins from RowGraph without relation information. For $Q$ relations,
+RelationGraph adds at most $O(Q^2)$ work, with $Q$ in the tens, to the
+$O(R+E)$ cost of each RowGraph layer over $R$ rows and $E$ references.
+
+\subsection{Prediction}
+\label{sec:method:prediction}
+
+The readout pairs the final state of the query row with that of each class
+node, and the prediction head, a two-layer MLP shared across tasks and
+databases, scores each pair:
+\begin{equation}
+ s_k=\operatorname{MLP}\!\left(\left[\mathbf h_{r_g^\star}^{(6)}\concat\mathbf h_{c_k}^{(6)}\right]\right),
+ \quad k\in\{0,1\},
+ \qquad
+ p_g=\operatorname{sigmoid}(s_1-s_0),
+ \label{eq:readout}
+\end{equation}
+with $\widehat y_g=\ind[p_g\geq\tfrac12]$ as in Eq.~\eqref{eq:task}. Because
+$c_0$ and $c_1$ summarize the labeled rows of the context, the same head
+serves every binary task without task-specific weights. As in \RT{}, training
+uses all tasks of the source databases, including autocomplete tasks, which
+predict a masked column of a database table, and tasks with numeric targets.
+Binary targets use the binary cross-entropy of $p_g$; numeric targets use class
+nodes for 33 fixed standardized values, label edges to the two values nearest
+to each label, and a cross-entropy against the same two-point target.
+
+% ---- Previous version (before the 2026-11-03 rewrite), kept for reference ----
+% \section{Methodology}
+% \label{sec:method}
+%
+% Figure~\ref{fig:architecture} organizes \model{} into two coupled branches. \textbf{Context Sampling} supplies retained rows and their local schema. In the lower branch, \textbf{Row Initialization} encodes visible cells into row states, which become nodes in \textbf{RowGraph}.  In the upper branch, \textbf{Relation Encoding} identifies interactions among the retained FK relations, and \textbf{RelationGraph} converts them into query-conditioned relation states.  The downward arrow supplies these states to RowGraph to condition its FK messages.  Finally, \textbf{Prediction} reads the updated states and produces the target probability.  All encoders, message-passing operators, and the readout are shared across databases and tasks.
+%
+% \subsection{Context Sampling}
+% \label{sec:method:sampling}
+%
+% Given a query $g=(r_g^\star,c_g^\star,t_g)$ specifying a query row, a target
+% column, and a prediction time, Context Sampling gathers a bounded
+% context $\mathcal X_g$ for predicting $y_g$. We follow \RT{}'s sampling
+% procedure \citep[Section~3.1 and Appendix~A]{ranjan2026rt}, traversing
+% PK--FK links in both directions, prioritizing parent rows, and sampling
+% nearby child rows subject to temporal constraints. Historical rows from the
+% query's task table are eligible for inclusion. We collect up to
+% $S_{\max}=2048$ cells, masking the query target and excluding designated
+% leakage fields. The retained cells initialize row representations, while
+% PK--FK links among the retained rows define RowGraph and the local schema
+% used by RelationGraph.
+%
+% The \textbf{Context Sampling} block starts from query row $r_g^\star$ and returns the sampled schema and retained rows shown in its two panels.0 Algorithm~\ref{alg:context_sampling} summarizes the traversal.  A stack first follows foreign-to-primary references to parent rows; when it is empty, the sampler selects a random pending child from the shallowest traversal depth. Each row is visited once, with a budget of $S_{\max}=2048$ serialized cells. The final row may therefore be only partially retained.
+%
+% For the block's temporal filtering, reverse-FK children are eligible only if they precede $t_g$ when both timestamps are known.  Database-table children are capped at $B_{\max}=256$ per expansion; task-table children are retained separately and must belong to the query's task table.  Serialization omits designated leakage fields in the query row or rows at its timestamp and masks the query target.  The resulting visible cells initialize rows in the lower branch, while the retained FK links define the schema used by the upper branch.
+%
+% \begin{algorithm}[tb]
+% \caption{Query-centered context sampling}
+% \label{alg:context_sampling}
+% \small
+% \algrenewcommand{\algorithmicrequire}{\textbf{Input:}}
+% \algrenewcommand{\algorithmicensure}{\textbf{Output:}}
+% \algrenewcommand{\algorithmicindent}{1.2em}
+% \begin{algorithmic}[1]
+% \Require Database $D$; query $g=(r_g^\star,c_g^\star,t_g)$;
+%          budgets $S_{\max},B_{\max}$
+% \Ensure Sampled context $\mathcal X_g$ with visible cells and retained FK links
+% \State $F\gets[(r_g^\star,0)]$; $B_j\gets[]$ for all depths $j$
+%        \Comment{Initialize frontiers}
+% \State $V\gets\varnothing$; $S\gets[]$
+%        \Comment{Visited rows and serialized cells}
+% \While{$|S|<S_{\max}$ \textbf{and} $(F\neq[]\;\textbf{or}\;\exists j:B_j\neq[])$}
+%   \If{$F\neq[]$}
+%     \State $(r,d)\gets$ \Call{PopLast}{$F$}
+%            \Comment{Prioritize FK parents}
+%   \Else
+%     \State $d\gets\min\{j:B_j\neq[]\}$
+%     \State $r\gets$ \Call{PopUniform}{$B_d$}
+%            \Comment{Sample at the shallowest depth}
+%   \EndIf
+%   \If{$r\in V$}
+%     \State \textbf{continue}
+%   \EndIf
+%   \State $V\gets V\cup\{r\}$
+%   \State $A\gets$ \Call{SerializeAndMask}{$r,g$}
+%   \State $k\gets\min\{|A|,S_{\max}-|S|\}$; $S\gets S\mathbin{\Vert}A_{1:k}$
+%          \Comment{Respect the cell budget}
+%   \ForAll{$u\in$ \Call{Parents}{$D,r$}}
+%     \State \Call{Push}{$F,(u,d+1)$}
+%   \EndFor
+%   \State $(C_{\mathrm{db}},C_{\mathrm{task}})\gets$ \Call{EligibleChildren}{$D,r,g$}
+%   \State $C\gets$ \Call{UniformSubset}{$C_{\mathrm{db}},\min(B_{\max},|C_{\mathrm{db}}|)$}
+%   \State \Call{AppendAll}{$B_{d+1},C\cup C_{\mathrm{task}}$}
+% \EndWhile
+% \State \Return \Call{VisibleContext}{$S$}
+% \end{algorithmic}
+% \vspace{0.4em}
+% \noindent\begin{minipage}{\linewidth}
+% \footnotesize
+% $F$ is a stack, $B_j$ a list of pending children at depth $j$, and
+% $\Vert$ denotes sequence concatenation.
+% \textsc{EligibleChildren} applies the temporal and task-table filters above;
+% \textsc{SerializeAndMask} removes leakage fields and masks the query target.
+% \textsc{VisibleContext} returns the unmasked cells, their row metadata, and FK links between retained rows.
+% \end{minipage}
+% \end{algorithm}
+%
+% \subsection{Row Initialization}
+% \label{sec:method:initialization}
+%
+% The \textbf{Row Initialization} block maps each retained row to one vector. Its ``column name + value`` operation adds a shared column-name projection to a type-specific value projection.  For visible cell $n$ with semantic type $\sigma(n)\in\{\mathsf{num},\mathsf{text},\mathsf{time},\mathsf{bool}\}$, let $\mathbf u_n^{\mathrm{col}}$ and $\mathbf u_n^{\mathrm{val}}$ denote these inputs.  Names and text values use fixed 384-dimensional text features; other values are scalars.  The ``row encoding'' operation pools the visible cells $\mathcal O_{g,r}$ of row $r$:
+% \begin{align}
+%  \mathbf x_n &=
+%  \operatorname{RMSNorm}_{\mathrm{col}}
+%  (W_{\mathrm{col}}\mathbf u_n^{\mathrm{col}}+\mathbf b_{\mathrm{col}})
+%  +\operatorname{RMSNorm}_{\sigma(n)}
+%  (W_{\sigma(n)}\mathbf u_n^{\mathrm{val}}+\mathbf b_{\sigma(n)}),
+%  \nonumber\\
+%  \mathbf h_{g,r}^{(0)} &=
+%  W_{\mathrm{row}}\!\left[
+%  \operatorname*{mean}_{n\in\mathcal O_{g,r}}\mathbf x_n
+%  \concat
+%  \operatorname*{max}_{n\in\mathcal O_{g,r}}\mathbf x_n
+%  \right]+\mathbf b_{\mathrm{row}}
+%  +\psi(t_g-t_r)+\ind[r=r_g^\star]\mathbf e_{\mathrm{seed}} .
+%  \label{eq:rowencoding}
+% \end{align}
+% The output $\mathbf h_{g,r}^{(0)}$ is the row vector passed to
+%
+% \textbf{RowGraph} in the overview.  It includes a learned projection $\psi$
+% of 16-frequency sinusoidal relative-time features and a shared query-row
+% marker $\mathbf e_{\mathrm{seed}}$.  Missing timestamps give zero relative
+% lag, and all states have width $d=256$.  Masked cells are excluded from
+% pooling, and table identities do not index learned embeddings.
+%
+% \subsection{RowGraph}
+% \label{sec:method:rowgraph}
+%
+% The \textbf{RowGraph} block receives the initialized rows and connects them
+% through retained PK--FK links.  Each forward FK $r_c\rightarrow r_p$ produces
+% a foreign-to-primary message edge of type $\fkp$ and a reverse edge of type
+% $\pkf$, corresponding to the two arrow directions in the figure.  Both
+% messages use the condition $\boldsymbol\delta_e$ supplied by
+% \textbf{RelationGraph}, defined in Section~\ref{sec:method:relations}.
+%
+% To support the overview's prediction block, RowGraph also contains
+% two candidate nodes $c_0,c_1$, omitted from the drawing for clarity.
+% Candidate $c_k$ is initialized by the shared Boolean encoder applied to $k$
+% plus a candidate marker.  A non-query row from the target table with a
+% visible target value $k$ sends a one-way $\mathsf{label}$ edge to $c_k$.
+% Candidates have no outgoing edges, so these contextual labels enter the
+% readout without being propagated back into database rows.
+%
+% Within \textbf{RowGraph}, six layers update row and candidate states.
+% For edge $e$ from $\operatorname{src}(e)$ to $\operatorname{dst}(e)$, let
+% $\tau_e\in\{\fkp,\pkf,\mathsf{label}\}$ denote its message type and
+% $\mathcal I(i)$ the incoming edges of node $i$.  All classification edges
+% have unit weight:
+% \begin{align}
+%  \mathbf m_e^{(\ell)}
+%  &=\relu\!\left(
+%  W_{\tau_e}^{(\ell)}\mathbf h_{\operatorname{src}(e)}^{(\ell-1)}
+%  +\mathbf b_{\tau_e}^{(\ell)}+\boldsymbol\delta_e\right),\nonumber\\
+%  \mathbf a_i^{(\ell)}
+%  &=\frac{\sum_{e\in\mathcal I(i)}\mathbf m_e^{(\ell)}}
+%  {\max(1,|\mathcal I(i)|)},\nonumber\\
+%  \mathbf h_i^{(\ell)}
+%  &=\operatorname{LN}^{(\ell)}\!\left(
+%  \mathbf h_i^{(\ell-1)}
+%  +\relu(W_{\mathrm{self}}^{(\ell)}\mathbf h_i^{(\ell-1)}
+%         +\mathbf b_{\mathrm{self}}^{(\ell)})
+%  +\mathbf a_i^{(\ell)}\right).
+%  \label{eq:rowmp}
+% \end{align}
+% These updates implement the figure's relation-conditioned FK messages:
+% $\boldsymbol\delta_e$ modifies messages before aggregation, while the
+% self-update preserves each node's own information.  Label edges set
+% $\boldsymbol\delta_e=\mathbf0$.  The final query and candidate states are
+% passed to prediction.
+%
+% \subsection{Relation Encoding and RelationGraph}
+% \label{sec:method:relations}
+%
+% The overview's upper branch assigns a state to each relation used by
+% \textbf{RowGraph}.  For a retained forward FK $e$, its relation is the ordered
+% child--parent table pair
+% $\chi(e)=(T_{\operatorname{src}(e)},T_{\operatorname{dst}(e)})$.
+% Each distinct pair becomes one \textbf{RelationGraph} node.  Thus,
+% \texttt{Results}$\rightarrow$\texttt{Drivers} and
+% \texttt{Results}$\rightarrow$\texttt{Races} are separate nodes, although both
+% originate in \texttt{Results}.  Parallel FK columns with the same table pair
+% share a relation state while remaining distinct row-level edges.
+%
+% The \textbf{Relation Encoding} block specifies how these nodes interact.
+% Adapting ULTRA's structural relation encoding~\citep{galkin2024ultra}, we use
+% the three patterns named in the figure.  For distinct relations
+% $\rho=(A,B)$ and $\rho'=(C,D)$, where the first table holds the FK:
+% \begin{itemize}
+%   \item \textbf{Shared child} ($A=C$): both relations originate in the same
+%   table.  In the figure, \texttt{Results}$\rightarrow$\texttt{Drivers} and
+%   \texttt{Results}$\rightarrow$\texttt{Races} share \texttt{Results}.
+%   Their relation nodes exchange messages in both directions.
+%   \item \textbf{Shared parent} ($B=D$): both relations reference the same
+%   table.  \texttt{Results}$\rightarrow$\texttt{Drivers} and
+%   \texttt{Task}$\rightarrow$\texttt{Drivers} share \texttt{Drivers} and
+%   likewise exchange messages in both directions.
+%   \item \textbf{Directed chain} ($B=C$): one relation continues into another,
+%   forming $A\rightarrow B\rightarrow D$.  The encoding panel illustrates
+%   \texttt{Results}$\rightarrow$\texttt{Races} followed by
+%   \texttt{Races}$\rightarrow$\texttt{Circuits}.  Messages along this chain and
+%   against it use separate transformations.  This general pattern is absent
+%   from the smaller three-node RelationGraph example drawn on the right.
+% \end{itemize}
+%
+% The red \texttt{Task}$\rightarrow$\texttt{Drivers} node in
+% \textbf{RelationGraph} marks the query's outgoing relation.  Every relation
+% instantiated by an outgoing FK of $r_g^\star$ receives a shared learned
+% boundary vector $\mathbf e_q$; other relations start at zero:
+% \begin{equation}
+%  \mathbf z_\rho^{(0)}
+%  =\ind[\exists e:\operatorname{src}(e)=r_g^\star,\chi(e)=\rho]\mathbf e_q .
+%  \label{eq:relationdefinition}
+% \end{equation}
+% The figure's Shared parent connection then lets the query relation influence
+% \texttt{Results}$\rightarrow$\texttt{Drivers}, which is connected through
+% Shared child to \texttt{Results}$\rightarrow$\texttt{Races}.
+%
+% To realize these \textbf{RelationGraph} connections, let
+% $\mathcal N(\rho)$ contain incoming pairs $(\rho',\eta)$, where $\eta$ is
+% Shared child, Shared parent, or one of the two Directed chain directions.
+% The three patterns therefore use four message transformations; if a pair
+% satisfies multiple patterns, each contributes a message.  Two layers update
+% the relation states:
+% \begin{equation}
+%  \begin{aligned}
+%  \mathbf z_\rho^{(p)}
+%  =\operatorname{LN}^{(p)}\!\Bigg(
+%  &\mathbf z_\rho^{(p-1)}
+%  +\relu(U_{\mathrm{self}}^{(p)}\mathbf z_\rho^{(p-1)}
+%         +\mathbf b_{\mathrm{self}}^{(p)})\\[-0.2em]
+%  &+\frac{\sum_{(\rho',\eta)\in\mathcal N(\rho)}
+%    \relu(U_\eta^{(p)}\mathbf z_{\rho'}^{(p-1)}+\mathbf b_\eta^{(p)})}
+%   {\max(1,|\mathcal N(\rho)|)}
+%  \Bigg).
+%  \end{aligned}
+%  \label{eq:relmp}
+% \end{equation}
+% The downward arrow from \textbf{RelationGraph} to \textbf{RowGraph} is the
+% projection
+% $\boldsymbol\delta_e=W_{\mathrm{cond}}\mathbf z_{\chi(e)}^{(2)}
+% +\mathbf b_{\mathrm{cond}}$.
+% It is zero-initialized and reused across all six row layers.  Both directions
+% of an FK use the same relation state but retain their direction-specific
+% row-message transformations in Eq.~\eqref{eq:rowmp}.  Table identities are
+% used only to construct these local interactions, so the same learned
+% operators apply to an unseen schema.
+%
+% Removing the upper \textbf{Relation Encoding--RelationGraph} branch gives
+% \base{}: every FK condition is set to zero, with Context Sampling,
+% Row Initialization, RowGraph, and Prediction otherwise unchanged.  The
+% relation branch adds 0.73M parameters.  For $C$ retained cells, $R$ rows,
+% $E$ row-graph edges, and $Q$ relations, Row Initialization costs
+% $O(C)$, each RowGraph layer costs $O(R+E)$, and relation interactions require
+% at most $O(Q^2)$ pairs, treating hidden width as fixed.
+%
+%
+%
+% \subsection{Prediction}
+% \label{sec:method:prediction}
+%
+% The overview's \textbf{Prediction} block maps the final RowGraph states to
+% an answer.  Its readout concatenates the query state with each
+% candidate state.  The \textbf{Prediction head} applies the same two-layer MLP
+% to both concatenations, and their score difference yields the probability:
+% \begin{equation}
+%  s_{g,k}=\operatorname{MLP}(
+%  [\mathbf h_{g,r_g^\star}^{(6)}\concat\mathbf h_{g,c_k}^{(6)}]),
+%  \qquad
+%  p_g=\operatorname{sigmoid}(s_{g,1}-s_{g,0}).
+%  \label{eq:readout}
+% \end{equation}
+% The final $\widehat y_g$ node in the figure thresholds $p_g$ at $1/2$, as in
+% Eq.~\eqref{eq:task}; binary cross-entropy trains the probability prediction.
+% RelationGraph affects this output through RowGraph's conditioned messages,
+% with no separate relation-state input to the readout and no task-specific head.

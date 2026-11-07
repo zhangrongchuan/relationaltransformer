@@ -1,164 +1,68 @@
-# Relational Transformer
+# ReGRow
 
-This repository provides a reference implementation
-for the **ICLR 2026** paper: [Relational Transformer: Toward Zero-Shot Foundation Models for Relational Data](https://arxiv.org/abs/2510.06377).
+A lightweight graph neural network for cross-database entity classification, built on [Relational Transformer (RT)](https://github.com/snap-stanford/relational-transformer). ReGRow combines row-level message passing with a query-conditioned relation graph; the d256 model has 2.78M parameters.
 
-**Exciting news!** Our follow-up work improves the pretraining and architecture for Relational Transformer. Please check out the [code](https://github.com/snap-stanford/plurel) for the paper [PluRel: Synthetic Data unlocks Scaling Laws for Relational Foundation Models](https://arxiv.org/abs/2602.04029).
+Training uses classification **and regression** tasks from the source databases. Evaluation is classification-only, on a held-out database with no parameter updates.
 
+## Setup
 
-## Overview
+Install [pixi](https://pixi.sh/latest/#installation), then run from the repository root:
 
-_🥇 Foundation Model Capabilities of Relational Transformer:_
-
-![Foundation Model Capabilities of Relational Transformer](assets/intro2.png "Foundation Model Capabilities of Relational Transformer")
-
-_🤖 Overview of the Relational Transformer Architecture:_
-
-![Overview of the Relational Transformer Architecture](assets/intro1.png "Overview of the Relational Transformer Architecture")
-
-
-## Installation
-
-1. Install pixi [https://pixi.sh/latest/#installation](https://pixi.sh/latest/#installation).
-
-2. Clone and install the repository:
 ```bash
-git clone https://github.com/snap-stanford/relational-transformer
-cd relational-transformer
 pixi install
-# compile and install the rust sampler
 cd rustler
 pixi run maturin develop --uv --release
+cd ..
 ```
 
+## Data
 
-## Data Preparation
+Place preprocessed data in `~/scratch/pre/<db>/`. All seven databases are needed: `rel-amazon`, `rel-avito`, `rel-event`, `rel-f1`, `rel-hm`, `rel-stack`, and `rel-trial`.
 
-1. Download the datasets and tasks from Relbench:
-```bash
-cd .. # back to the root of the repository
-pixi run python scripts/download_relbench.py
-```
-
-2. Link the cache repository
-```bash
-mkdir ~/scratch
-ln -s ~/.cache/relbench ~/scratch/relbench
-```
-
-3. Preprocessing (per database):
-```bash
-cd rustler
-pixi run cargo run --release -- pre rel-f1
-```
-
-4. Text embedding (per database):
-
-```bash
-pixi run python -m rt.embed rel-f1
-```
-
-> [!NOTE]
-> Steps 3. and 4. should be run for all databases: \
-> `rel-amazon`, `rel-avito`, `rel-event`, `rel-f1`, `rel-hm`, `rel-stack`, `rel-trial`
-
-## Download Preprocessed Data
-This project’s preprocessed data is hosted at [hvag976/relational-transformer](https://huggingface.co/datasets/hvag976/relational-transformer/tree/main) on the Hugging Face Hub. You can directly use this data and skip the data preparation step.
-
-1. Install the CLI
 ```bash
 pip install -U huggingface_hub
-```
-
-2. Create the destination
-```bash
 mkdir -p ~/scratch/pre
+huggingface-cli download hvag976/relational-transformer --repo-type dataset --local-dir ~/scratch/pre --local-dir-use-symlinks False
 ```
 
-3. Download the repository contents into ~/scratch/pre
+## Train
+
+Train on the other databases and evaluate F1 classification tasks:
+
 ```bash
-huggingface-cli download hvag976/relational-transformer \
-  --repo-type dataset \
-  --local-dir ~/scratch/pre \
-  --local-dir-use-symlinks False
-```  
-
-## Download Pretrained Checkpoints
-
-This project's pretrained model checkpoints are hosted at [rishabh-ranjan/relational-transformer](https://huggingface.co/rishabh-ranjan/relational-transformer/tree/main) on the Hugging Face Hub. You can directly use these checkpoints and skip the pretraining step.
-
-Four kinds of checkpoints are provided:
-- `pretrain_<dataset>_<task>.pt`: pretrained with `<dataset>` held out.
-- `contd-pretrain_<dataset>_<task>.pt`: obtained by continued pretraining of `pretrain_<dataset>_<task>.pt` on `<dataset>` with `<task>` held out.
-- `finetune-from-{pretrain,contd-pretrain}_<dataset>_<task>.pt`: fine-tuned checkpoints behind the replicated "RT | pretrained + fine-tuned" cells on the [RelBench leaderboard](https://relbench.stanford.edu/leaderboard/). The board reports the per-task best over fine-tuning from the plain-pretraining vs continued-pretraining init; the file provided is the winning init for that task. Regression fine-tuning uses val-NMAE (MAE / train-split std) best-checkpoint selection, matching the leaderboard metric; numbers are full official test split. Cells without a file here are the paper's own pretrain-init fine-tuning numbers (reproduce via `scripts/example_finetune.py`).
-- rel-event checkpoints (`pretrain_rel-event_<task>.pt`, `contd-pretrain_rel-event_<task>.pt`): rel-event was not covered by the original release; these produce the leaderboard's RT rel-event cells.
-
-To use, pass the checkpoint path to the `load_ckpt_path` argument of the training scripts.
-
-1. Install the Hugging Face CLI (if not already installed):
-```bash
-pip install -U huggingface_hub
+pixi run python rowgraph/train.py --db rel-f1 --task all-clf \
+  --variant relgraph_no_warm --d-model 256 --seed 2
 ```
 
-2. Download all checkpoints:
-```bash
-mkdir -p ~/scratch/rt_ckpts
-huggingface-cli download rishabh-ranjan/relational-transformer \
-  --repo-type model \
-  --local-dir ~/scratch/rt_ckpts \
-  --local-dir-use-symlinks False
+Defaults: 100,000 steps, batch size 32, 2048 cells per context, lr `1e-3`, wd `0.1`. Plan for one GPU and approximately 16 CPU cores / 64G RAM.
+
+- Use `--task driver-dnf` to evaluate DNF only.
+- Set `--d-model` to `128`, `256`, `512`, or `744` for the width experiments.
+- Use `--variant no_warm` for the no-relation-graph ablation.
+- For the paper's d256 settings, use `--wd 0.3` on Avito and `--lr 2e-3` on Stack.
+- Run `pixi run python rowgraph/train.py --help` for all options.
+
+Checkpoints are selected by Standard validation AUROC. Final evaluation reports both Standard and History Masked test AUROC.
+
+## Results
+
+Each task writes its checkpoint, configuration, validation log, and final metrics to:
+
+```text
+results/<model_id>/<db>/<task>/<start_time>_s<seed>/
 ```
 
-3. Download a specific checkpoint:
-```bash
-mkdir -p ~/scratch/rt_ckpts
-huggingface-cli download rishabh-ranjan/relational-transformer \
-  --repo-type model \
-  --include "pretrain_rel-amazon_user-churn.pt" \
-  --local-dir ~/scratch/rt_ckpts \
-  --local-dir-use-symlinks False
-```
+See [results/README.md](results/README.md) for existing parameter, ablation, and case-study results. Relation-graph runs predating the **2026-11-02 relation-key fix** require retraining; corrected d256 runs are stored in `results/relfix_d256/`.
 
+## Repository Layout
 
-## Experiments
+| Path | Contents |
+|---|---|
+| [`rowgraph/`](rowgraph/) | Model and training entry point |
+| [`rt/`](rt/), [`rustler/`](rustler/) | RT data pipeline and Rust sampler |
+| [`analysis/`](analysis/README.md) | Parameter analysis, ablations, multi-hop studies, and evaluation tools |
+| [`results/`](results/README.md) | Saved experiments and historical source snapshots |
+| [`paper/`](paper/) | Paper source and references |
+| [`archived/`](archived/README.md) | Historical experiments and tools |
 
-First setup `wandb` with `pixi run wandb login` or `pixi run wandb disabled`. The following example commands replicate the results for `rel-amazon/user-churn` from the paper.
-
-* Pretrain on all datasets with `rel-amazon` held-out
-(takes about 2 hours on 8xA100 GPUs):
-```bash
-pixi run torchrun --standalone --nproc_per_node=8 scripts/example_pretrain.py
-```
-
-* Continued pretrain
-from best checkpoint obtained above
-on all `rel-amazon` tasks
-with `user-churn` held-out
-(takes about 15 minutes on 8xA100 GPUs):
-```bash
-pixi run torchrun --standalone --nproc_per_node=8 scripts/example_contd_pretrain.py
-```
-
-* Finetune
-from best checkpoint obtained above
-on `rel-amazon/user-churn` task only
-(takes about 1.5 hours on 8xA100 GPUs):
-```bash
-pixi run torchrun --standalone --nproc_per_node=8 scripts/example_finetune.py
-```
-
-
-
-## Citation
-
-Please cite our paper as:
-
-```bibtex
-@inproceedings{ranjan2025relationaltransformer,
-    title={{Relational Transformer:} Toward Zero-Shot Foundation Models for Relational Data}, 
-    author={Rishabh Ranjan and Valter Hudovernik and Mark Znidar and Charilaos Kanatsoulis and Roshan Upendra and Mahmoud Mohammadi and Joe Meyer and Tom Palczewski and Carlos Guestrin and Jure Leskovec},
-    booktitle={The Fourteenth International Conference on Learning Representations},
-    year={2026}
-}
-```
-
+Detailed setup, preprocessing, training, and SLURM instructions are preserved in the [full documentation](archived/docs/README.detailed.md).
