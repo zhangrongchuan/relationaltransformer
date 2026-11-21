@@ -6,7 +6,7 @@ Let $\mathcal V_D$ be the finite set of rows in a database $D$ and $\mathcal R_D
 
 \paragraph{Temporal entity classification.}
 This paper focuses on entity classification, and our baseline comparisons
-are restricted to this task type. A query $g=(r_g^\star,c_g^\star,t_g)$ specifies a query row, a target column, and a prediction time. The task is to predict the unknown binary target $y_g\in\{0,1\}$ associated with this query. The input consists of $g$ and a bounded, time-filtered context $\mathcal X_g$ sampled from $\mathcal G_D$, containing visible row attributes and PK--FK links. The label of the query row is masked (Section~\ref{sec:method:sampling}). The output is a probability $p_g$ and its corresponding class prediction:
+are restricted to this task type. A query $g=(r_g^\star,c_g^\star,t_g)$ specifies a query row, a target column, and a prediction time. The task is to predict the unknown binary target $y_g\in\{0,1\}$ associated with this query. The input consists of $g$ and a bounded, time-filtered context $\mathcal X_g$ sampled from $\mathcal G_D$, containing visible row attributes and PK--FK links. The query target value and designated leakage fields are excluded. The output is a probability $p_g$ and its corresponding class prediction:
 \begin{equation}
  p_g=p_\theta(y_g=1\mid\mathcal X_g,g),
  \qquad \widehat y_g=\ind[p_g\geq\tfrac12].
