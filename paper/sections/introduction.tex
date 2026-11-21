@@ -316,15 +316,18 @@ no capacity is spent on recovering this structure from data.
   \caption{Overview of \model{}. Context Sampling collects a bounded context
   around the query row that respects the prediction time: the tables and
   foreign-key references it contains (upper panel) and the sampled rows
-  (lower panel). Row Initialization encodes the cells of each row into one
-  vector. Relation Encoding links the foreign-key relations that share a
-  table, and RelationGraph computes one representation per relation,
-  conditioned on the query relation. These representations condition the
-  child-to-parent (f$\rightarrow$p) and parent-to-child (p$\rightarrow$f)
-  messages of RowGraph. Prediction compares the final state of the query row
-  with class nodes that collect the labels of earlier task rows; the class
-  nodes and their edges are omitted from the drawing. Red marks the query
-  table, the query row, and the query relation.}
+  (lower panel); key columns become foreign-key edges rather than cells.
+  Row Initialization encodes the non-key cells of each row, pools them into
+  one vector, and adds the row's relative time and, for the query row, a
+  query marker (Eq.~\eqref{eq:rowencoding}). Relation Encoding links the
+  foreign-key relations that share a table, and RelationGraph computes one
+  representation per relation, conditioned on the query relation. These
+  representations condition the child-to-parent (f$\rightarrow$p) and
+  parent-to-child (p$\rightarrow$f) messages of RowGraph, in which earlier
+  task rows also send label edges to the class nodes $c_0$ and $c_1$.
+  Prediction scores the query row against each class node with a shared MLP
+  (Eq.~\eqref{eq:readout}). Red marks the query table, the query row, and
+  the query relation.}
   \label{fig:architecture}
 \end{figure*}
 

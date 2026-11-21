@@ -26,15 +26,24 @@ GID_OFF = 2 ** 32  # batch offset for globally unique row ids
 SEM_NUMBER, SEM_TEXT, SEM_DATETIME, SEM_BOOLEAN = 0, 1, 2, 3
 
 
-def scatter_mean_max(src, index, n):
+def scatter_pool(src, index, n, pooling="meanmax"):
+    """Aggregate visible cell embeddings into one vector per row."""
+    if pooling not in ("average", "max", "meanmax"):
+        raise ValueError(f"unknown cell-to-row pooling: {pooling}")
     d = src.shape[-1]
-    mean = torch.zeros(n, d, device=src.device, dtype=src.dtype)
-    cnt = torch.zeros(n, device=src.device, dtype=src.dtype)
-    mean.index_add_(0, index, src)
-    cnt.index_add_(0, index, torch.ones_like(index, dtype=src.dtype))
-    mean = mean / cnt.clamp(min=1)[:, None]
-    mx = torch.full((n, d), -1e4, device=src.device, dtype=src.dtype)
-    mx.scatter_reduce_(0, index[:, None].expand(-1, d), src, "amax")
+    if pooling != "max":
+        mean = torch.zeros(n, d, device=src.device, dtype=src.dtype)
+        cnt = torch.zeros(n, device=src.device, dtype=src.dtype)
+        mean.index_add_(0, index, src)
+        cnt.index_add_(0, index, torch.ones_like(index, dtype=src.dtype))
+        mean = mean / cnt.clamp(min=1)[:, None]
+    if pooling != "average":
+        mx = torch.full((n, d), -1e4, device=src.device, dtype=src.dtype)
+        mx.scatter_reduce_(0, index[:, None].expand(-1, d), src, "amax")
+    if pooling == "average":
+        return mean
+    if pooling == "max":
+        return mx
     return torch.cat([mean, mx], dim=-1)
 
 
@@ -74,21 +83,17 @@ class RowGraphNet(nn.Module):
         n_bins=33,
         use_time=True,
         use_label_edges=True,
-        pool="meanmax",
         use_relgraph=False,
         use_candidates=True,  # False: no candidate nodes, MLP heads on the seed row (ablation)
+        pooling="meanmax",
     ):
         super().__init__()
+        if pooling not in ("average", "max", "meanmax"):
+            raise ValueError(f"unknown cell-to-row pooling: {pooling}")
+        self.pooling = pooling
         self.use_time = use_time
         self.use_candidates = use_candidates
         self.use_label_edges = use_label_edges and use_candidates
-        self.pool = pool
-        if pool == "attn":
-            # learned-query attention over cells within a row: wide rows keep
-            # their salient fields instead of diluting them into the mean
-            self.attn_w = nn.Linear(d_model, d_model)
-            self.attn_q = nn.Parameter(torch.randn(d_model) / d_model ** 0.5)
-
         # cell encoders — names/shapes match RT for warm starting
         self.enc_dict = nn.ModuleDict(
             {
@@ -106,7 +111,7 @@ class RowGraphNet(nn.Module):
             }
         )
 
-        self.row_proj = nn.Linear(2 * d_model, d_model)
+        self.row_proj = nn.Linear((2 if pooling == "meanmax" else 1) * d_model, d_model)
         self.seed_emb = nn.Parameter(torch.zeros(d_model))
         if use_candidates:
             self.cand_emb = nn.Parameter(torch.zeros(d_model))
@@ -214,39 +219,22 @@ class RowGraphNet(nn.Module):
         row_g = seq2g[(uniq // GID_OFF)]
 
         cell_emb = self.encode_cells(batch, valid)[valid]  # (Ncells,d)
-        if self.pool == "attn":
-            sc = torch.tanh(self.attn_w(cell_emb)) @ self.attn_q  # (Ncells,)
-            mx = torch.full((R,), -1e4, device=dev, dtype=sc.dtype)
-            mx.scatter_reduce_(0, inv, sc, "amax")
-            e = torch.exp(sc - mx[inv])
-            z = torch.zeros(R, device=dev, dtype=sc.dtype)
-            z.index_add_(0, inv, e)
-            alpha = e / z[inv].clamp(min=1e-6)
-            attn = torch.zeros(R, cell_emb.shape[-1], device=dev, dtype=cell_emb.dtype)
-            attn.index_add_(0, inv, cell_emb * alpha[:, None])
-            mean = torch.zeros_like(attn)
-            cnt = torch.zeros(R, device=dev, dtype=cell_emb.dtype)
-            mean.index_add_(0, inv, cell_emb)
-            cnt.index_add_(0, inv, torch.ones_like(sc))
-            mean = mean / cnt.clamp(min=1)[:, None]
-            h_row = self.row_proj(torch.cat([attn, mean], dim=-1))
-        else:
-            p_emb, p_inv = cell_emb, inv
-            if getattr(self, "drop_label_cells", False):  # analysis hook (graph_study.py); off by default
-                # pool context task rows without their label cell: the label then
-                # reaches the model only through the has_label edges
-                keep = ~(
-                    (batch["col_name_idxs"] == target_col[:, None])
-                    & (batch["table_name_idxs"] == seed_table[:, None])
-                    & (node != seed_node[:, None])
-                )[valid]
-                p_emb, p_inv = cell_emb[keep], inv[keep]
-            pooled = scatter_mean_max(p_emb, p_inv, R)
-            if p_inv.numel() < inv.numel():  # a row left without cells pools to zero
-                left = torch.zeros(R, dtype=torch.bool, device=dev)
-                left[p_inv] = True
-                pooled = pooled * left[:, None]
-            h_row = self.row_proj(pooled)
+        p_emb, p_inv = cell_emb, inv
+        if getattr(self, "drop_label_cells", False):  # analysis hook (graph_study.py); off by default
+            # pool context task rows without their label cell: the label then
+            # reaches the model only through the has_label edges
+            keep = ~(
+                (batch["col_name_idxs"] == target_col[:, None])
+                & (batch["table_name_idxs"] == seed_table[:, None])
+                & (node != seed_node[:, None])
+            )[valid]
+            p_emb, p_inv = cell_emb[keep], inv[keep]
+        pooled = scatter_pool(p_emb, p_inv, R, self.pooling)
+        if p_inv.numel() < inv.numel():  # a row left without cells pools to zero
+            left = torch.zeros(R, dtype=torch.bool, device=dev)
+            left[p_inv] = True
+            pooled = pooled * left[:, None]
+        h_row = self.row_proj(pooled)
 
         # representative cell per row -> row-level fields
         pos = torch.arange(flat_gid.numel(), device=dev)

@@ -38,6 +38,7 @@ Defaults: 100,000 steps, batch size 32, 2048 cells per context, lr `1e-3`, wd `0
 
 - Use `--task driver-dnf` to evaluate DNF only.
 - Set `--d-model` to `128`, `256`, `512`, or `744` for the width experiments.
+- Set `--pooling` to `average`, `max`, or `meanmax` (default) for cell-to-row aggregation.
 - Use `--variant no_warm` for the no-relation-graph ablation.
 - For the paper's d256 settings, use `--wd 0.3` on Avito and `--lr 2e-3` on Stack.
 - Run `pixi run python rowgraph/train.py --help` for all options.

@@ -59,11 +59,6 @@ VARIANTS = {
     "dropE09": {"train_label_dropout": 0.9},
     "dropE09_no_warm": {"train_label_dropout": 0.9, "warm_start": False},
     "dropE05_no_warm": {"train_label_dropout": 0.5, "warm_start": False},
-    "attn": {"pool": "attn"},
-    "attn_no_warm": {"pool": "attn", "warm_start": False},
-    "attn_dropE09_no_warm": {
-        "pool": "attn", "train_label_dropout": 0.9, "warm_start": False,
-    },
     "relgraph_no_warm": {"use_relgraph": True, "warm_start": False},
     # ablation: no candidate nodes / label edges, MLP heads on the seed row;
     # context labels stay visible as cells of their task rows
@@ -173,6 +168,8 @@ def parse_args(argv):
                         "share one training run")
     p.add_argument("--variant", required=True, choices=sorted(VARIANTS),
                    help="model configuration (see VARIANTS)")
+    p.add_argument("--pooling", choices=("average", "max", "meanmax"),
+                   default="meanmax", help="cell-to-row pooling (default: meanmax)")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--steps", type=int, default=100_000, dest="max_steps",
                    help="training steps (default: 100000)")
@@ -199,7 +196,7 @@ def parse_args(argv):
               flush=True)
         return argparse.Namespace(
             db=argv[0], tables=[argv[1]], variant=argv[2], lr=1e-3, wd=0.1,
-            out_dir=default_out_dir(), **kw)
+            out_dir=default_out_dir(), pooling="meanmax", **kw)
     return p.parse_args(argv)
 
 
@@ -248,7 +245,7 @@ def main():
     if len(eval_specs) > 1:
         assert not warm, "warm start loads a per-task checkpoint; use one --task"
     net = RowGraphNet(
-        d_model=d_model, n_layers=cfg.pop("n_layers", 6), **cfg
+        d_model=d_model, n_layers=cfg.pop("n_layers", 6), pooling=args.pooling, **cfg
     ).to(device)
     if warm:
         assert d_model == 256, "warm start requires d_model=256"
@@ -268,6 +265,8 @@ def main():
     out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     suffix = ""
+    if args.pooling != "meanmax":
+        suffix += f"_pool{args.pooling}"
     if seq_len != 2048:
         suffix += f"_ctx{seq_len}"
     if d_model != 256:
@@ -328,6 +327,7 @@ def main():
             "model_id": model_id, "variant": variant, "db": db, "table": table,
             "task_type": job["task_type"], "seed": seed, "max_steps": max_steps,
             "seq_len": seq_len, "d_model": d_model,
+            "pooling": args.pooling,
             "warm_start": warm, "train_label_dropout": train_dropout,
             "lr": lr, "weight_decay": wd, "batch_size": 32,
             "optimizer": "AdamW", "scheduler": "OneCycleLR(pct_start=0.2,linear)",

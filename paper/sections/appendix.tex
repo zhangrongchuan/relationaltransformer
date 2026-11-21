@@ -1,0 +1,37 @@
+\section{Implementation Details}
+\label{app:details}
+
+\paragraph{Context sampling.}
+We use the sampler of \RT{} \citep[Section~3.1 and Appendix~A]{ranjan2026rt}.
+Starting from the query row, it first follows child-to-parent references and
+then samples pending children from the shallowest depth. A child is eligible
+only if it precedes $t_g$ when both timestamps are known. At most 256
+children from database tables are sampled per expansion, and task-table
+children must belong to the current task. Designated leakage fields are
+removed, and the context is capped at 2{,}048 cells.
+
+\paragraph{Cell and time encoding.}
+Column descriptions and text values are embedded by a frozen 384-dimensional
+sentence encoder, as in \RT{}. Numeric and Boolean values are standardized per
+column, and datetimes globally. The time encoding $\psi$ applies a linear map
+to $\big[\cos(2\pi\Delta_r/\lambda_i),\sin(2\pi\Delta_r/\lambda_i)\big]_{i=1}^{16}$,
+with wavelengths $\lambda_i$ spaced logarithmically from one day to about
+100 years.
+
+\paragraph{Numeric targets.}
+Numeric targets occur only in source training. For them, the two class nodes
+are replaced by 33 value nodes placed at the standard-normal quantiles of 33
+evenly spaced levels from 0.005 to 0.995, and initialized with the numeric
+value encoder plus $\mathbf e_{\mathrm{class}}$. Each earlier task row sends
+label edges to the two value nodes that bracket its clipped label, with
+linear-interpolation weights that also weight the mean in
+Eq.~\eqref{eq:rowmp}. The scorer of Eq.~\eqref{eq:readout} gives one score per
+value node, and the softmax over these scores is trained with cross-entropy
+against the interpolated two-hot target. Losses are summed over targets and
+divided by the number of targets in the batch.
+
+\paragraph{Parameters and cost.}
+With $d=256$, \model{} has 2.78M parameters, of which RelationGraph and the
+projection $W_{\mathrm{cond}}$ account for 0.72M. The cost of each RelationGraph
+layer is quadratic in the number of relations in the context, which is
+bounded by the number of table pairs in the schema.
